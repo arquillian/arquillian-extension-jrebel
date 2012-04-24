@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <!-- Parent -->
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
         <version>8</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <!-- Model Version -->
@@ -15,17 +15,22 @@
 
     <!-- Artifact Configuration -->
     <groupId>org.jboss.arquillian.extension</groupId>
-    <artifactId>arquillian-jrebel</artifactId>
+    <artifactId>arquillian-jrebel-parent</artifactId>
     <version>1.0.0.Alpha1-SNAPSHOT</version>
-    <name>Arquillian Extension JRebel</name>
+    <name>Arquillian Extension JRebel Parent</name>
+    <packaging>pom</packaging>
     <url>http://www.jboss.org</url>
     <description>Arquillian Extension JRebel</description>
 
+    <modules>
+        <module>impl</module>
+        <module>int-test</module>
+    </modules>
     <!-- Properties -->
     <properties>
 
         <!-- Versioning -->
-        <version.arquillian_core>1.0.0.CR7</version.arquillian_core>
+        <version.arquillian_core>1.0.0.Final</version.arquillian_core>
         <version.jboss_as_5>5.1.0.GA</version.jboss_as_5>
         <version.jboss_javaee6_spec>1.0.0.Final</version.jboss_javaee6_spec>
 
@@ -54,56 +59,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jboss.arquillian.core</groupId>
-            <artifactId>arquillian-core-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.arquillian.container</groupId>
-            <artifactId>arquillian-container-impl-base</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec</groupId>
-            <artifactId>jboss-javaee-6.0</artifactId>
-            <version>${version.jboss_javaee6_spec}</version>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <profiles>
-        <profile>
-            <id>arq-jbossas-remote-5</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.jboss.arquillian.container</groupId>
-                    <artifactId>arquillian-jbossas-remote-5.1</artifactId>
-                    <version>1.0.0.CR3</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.jboss.jbossas</groupId>
-                    <artifactId>jboss-as-client</artifactId>
-                    <version>${version.jboss_as_5}</version>
-                    <type>pom</type>
-                    <scope>provided</scope>
-                </dependency>
-
-            </dependencies>
-        </profile>
-    </profiles>
-
     <build>
         <plugins>
             <plugin>
@@ -112,12 +67,6 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <pushChanges>false</pushChanges>
                     <localCheckout>true</localCheckout>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <skipTests>true</skipTests>
                 </configuration>
             </plugin>
         </plugins>

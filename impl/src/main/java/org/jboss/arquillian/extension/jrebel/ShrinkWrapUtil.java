@@ -25,21 +25,24 @@ import java.io.File;
  * @author <a href="mailto:aslak@redhat.com">Aslak Knutsen</a>
  * @version $Revision: $
  */
-final class ShrinkWrapUtil
-{
-   private ShrinkWrapUtil() { }
+final class ShrinkWrapUtil {
+// -------------------------- STATIC METHODS --------------------------
 
-   public static File createTempDirectory() {
-      try
-      {
-         File root = new File("target/jrebel-temp/"); //File.createTempFile("arquillian", "jrebel");
-         root.delete();
-         root.mkdirs();
-         return root;
-      } 
-      catch (Exception e) 
-      {
-         throw new RuntimeException(e);
-      }
-   }
+    public static File createTempDirectory()
+    {
+        try {
+            File root = new File("target/jrebel-temp/"); //File.createTempFile("arquillian", "jrebel");
+            root.delete();
+            root.mkdirs();
+            return root;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+// --------------------------- CONSTRUCTORS ---------------------------
+
+    private ShrinkWrapUtil()
+    {
+    }
 }
