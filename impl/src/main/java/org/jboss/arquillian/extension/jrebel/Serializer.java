@@ -29,31 +29,15 @@ import java.io.OutputStream;
 
 /**
  * Serializer
- * 
+ *
  * @author <a href="mailto:aslak@redhat.com">Aslak Knutsen</a>
  * @version $Revision: $
  */
 final class Serializer {
+// -------------------------- STATIC METHODS --------------------------
 
-   public static void toStream(Object object, File out) {
-      try {
-         toStream(object, new FileOutputStream(out));
-      } catch (Exception e) {
-         throw new RuntimeException("Could not serialize object to Stream", e);
-      }
-   }
-
-   public static void toStream(Object object, OutputStream out) {
-      byte[] serialized = toByteArray(object);
-      try {
-         out.write(serialized);
-         out.close();
-      } catch (Exception e) {
-         throw new RuntimeException("Could not serialize object to Stream", e);
-      }
-   }
-
-   public static byte[] toByteArray(Object object) {
+    public static byte[] toByteArray(Object object)
+    {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ObjectOutputStream outObj = new ObjectOutputStream(out);
@@ -65,7 +49,8 @@ final class Serializer {
         }
     }
 
-    public static <T> T toObject(Class<T> type, byte[] objectArray) {
+    public static <T> T toObject(Class<T> type, byte[] objectArray)
+    {
         try {
             ObjectInputStream outObj = new ObjectInputStream(new ByteArrayInputStream(objectArray));
             Object object = outObj.readObject();
@@ -76,29 +61,50 @@ final class Serializer {
         }
     }
 
-    public static <T> T toObject(Class<T> type, File input) {
-       try {
-          return toObject(type, new FileInputStream(input));
-       } catch (Exception e) {
-           throw new RuntimeException("Could not deserialize object", e);
-       }
-   }
+    public static <T> T toObject(Class<T> type, File input)
+    {
+        try {
+            return toObject(type, new FileInputStream(input));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not deserialize object", e);
+        }
+    }
 
-    public static <T> T toObject(Class<T> type, InputStream input) {
-       try {
-           ObjectInputStream outObj = new ObjectInputStream(input);
-           Object object = outObj.readObject();
+    public static <T> T toObject(Class<T> type, InputStream input)
+    {
+        try {
+            ObjectInputStream outObj = new ObjectInputStream(input);
+            Object object = outObj.readObject();
 
-           return type.cast(object);
-       } catch (Exception e) {
-           throw new RuntimeException("Could not deserialize object", e);
-       }
-       finally {
-          try {
-             input.close();
-          } catch (Exception e) {
-             e.printStackTrace();
-          }
-       }
-   }
+            return type.cast(object);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not deserialize object", e);
+        } finally {
+            try {
+                input.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void toStream(Object object, File out)
+    {
+        try {
+            toStream(object, new FileOutputStream(out));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not serialize object to Stream", e);
+        }
+    }
+
+    public static void toStream(Object object, OutputStream out)
+    {
+        byte[] serialized = toByteArray(object);
+        try {
+            out.write(serialized);
+            out.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Could not serialize object to Stream", e);
+        }
+    }
 }
