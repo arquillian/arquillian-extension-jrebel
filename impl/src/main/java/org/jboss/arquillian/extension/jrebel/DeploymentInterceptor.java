@@ -23,7 +23,9 @@ import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaData;
 import org.jboss.arquillian.container.spi.context.annotation.DeploymentScoped;
 import org.jboss.arquillian.container.spi.event.DeployDeployment;
+import org.jboss.arquillian.container.spi.event.DeploymentEvent;
 import org.jboss.arquillian.container.spi.event.UnDeployDeployment;
+import org.jboss.arquillian.core.api.Event;
 import org.jboss.arquillian.core.api.InstanceProducer;
 import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.core.api.annotation.Observes;
@@ -53,6 +55,11 @@ public class DeploymentInterceptor {
     private InstanceProducer<Deployment> deploymentProducer;
 
     @Inject
+    private Event<DeploymentEvent> event;
+
+    private boolean forcedUndeployment;
+
+    @Inject
     @DeploymentScoped
     private InstanceProducer<ProtocolMetaData> protocolMetaData;
 
@@ -72,14 +79,20 @@ public class DeploymentInterceptor {
         final Deployment deployment = eventContext.getEvent().getDeployment();
         Archive<?> archive = deployment.getDescription().getTestableArchive();
         File exportPath = new File(tempDirectory, archive.getName());
-//        TODO use metadata file as marker
-        boolean alreadyDeployed = exportPath.exists();
+        File metaDataFile = new File(tempDirectory, archive.getName() + ".meta");
+        boolean alreadyDeployed = exportPath.exists() && metaDataFile.exists();
+        //noinspection ResultOfMethodCallIgnored
         exportPath.mkdirs();
         archive.as(ExplodedExporter.class).exportExploded(tempDirectory);
 
-        File metaDataFile = new File(tempDirectory, archive.getName() + ".meta");
 
         if (!alreadyDeployed) {
+            forcedUndeployment = true;
+            try {
+                event.fire(new UnDeployDeployment(eventContext.getEvent().getContainer(), deployment));
+            } finally {
+                forcedUndeployment = false;
+            }
 //            TODO if rebel.xml already exists in the archive then don't add new one and don't do exploded export
             String rebelXml = createRebelXML(exportPath);
             archive.add(new StringAsset(rebelXml), "WEB-INF/classes/rebel.xml");
@@ -102,13 +115,14 @@ public class DeploymentInterceptor {
             deployment.deployed();
             deploymentProducer.set(deployment);
             deploymentDescriptionProducer.set(deployment.getDescription());
-//         eventContext.proceed();
         }
     }
 
     public void onUnDeploy(@Observes EventContext<UnDeployDeployment> eventContext)
     {
-        //eventContext.proceed();
+        if (forcedUndeployment) {
+            eventContext.proceed();
+        }
     }
 
     private String createRebelXML(File output)
