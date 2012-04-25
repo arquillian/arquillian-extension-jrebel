@@ -88,6 +88,17 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>arq-jbossas-remote-7.1</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.jboss.as</groupId>
+                    <artifactId>jboss-as-arquillian-container-remote</artifactId>
+                    <version>7.1.1.Final</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
     <build>

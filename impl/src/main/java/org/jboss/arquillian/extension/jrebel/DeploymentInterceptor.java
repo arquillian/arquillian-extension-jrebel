@@ -36,6 +36,8 @@ import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.formatter.Formatters;
 
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * DeploymentInterceptor
@@ -45,6 +47,8 @@ import java.io.File;
  */
 public class DeploymentInterceptor {
 // ------------------------------ FIELDS ------------------------------
+
+    private static final Logger LOGGER = Logger.getLogger(DeploymentInterceptor.class.getName());
 
     @Inject
     @DeploymentScoped
@@ -90,6 +94,8 @@ public class DeploymentInterceptor {
             forcedUndeployment = true;
             try {
                 event.fire(new UnDeployDeployment(eventContext.getEvent().getContainer(), deployment));
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Cannot undeploy " + deployment.getDescription().getName(), e);
             } finally {
                 forcedUndeployment = false;
             }
