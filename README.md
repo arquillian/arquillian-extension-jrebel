@@ -14,6 +14,10 @@ Just add impl module to classpath and run test either from IDE or maven.
         <version>1.0.0.Alpha1-SNAPSHOT</version>
     </dependency>
 
+**Make sure you use servlet protocol!** To do that add following to arquillian.xml:
+
+    <defaultProtocol type="Servlet 3.0"/>
+
 First time you run test it will deploy the package, export the deployment to target/jrebel-temp directory and attach auto generated rebel.xml file that instructs JRebel to override deployed package with the one exported to target/jrebel-temp. Next time you run the test Arquillian will check if package exists in the temp directory and if so it will run tests without deploying the package.
 
 If you want to force Arquillian to deploy the package again to the container you have to delete the temp directory.
