@@ -17,45 +17,23 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
-import javax.annotation.Resource;
-import javax.jms.ConnectionFactory;
-import javax.jms.Queue;
-
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.jboss.arquillian.core.spi.LoadableExtension;
 
 /**
- * JRebelIntegrationTestCase
+ * JRebelExtension
  *
  * @author <a href="mailto:aslak@redhat.com">Aslak Knutsen</a>
  * @version $Revision: $
  */
-@RunWith(Arquillian.class)
-public class JRebelIntegrationTestCase
-{
-   @Deployment
-   public static WebArchive createWar() 
-   {
-      return ShrinkWrap.create(WebArchive.class, "jrebel-test.war");
-   }
+public class JRebelExtension implements LoadableExtension {
+// ------------------------ INTERFACE METHODS ------------------------
 
-   @Resource(mappedName = "queue/DLQ")
-   private Queue dlq;
-   
-   @Resource(mappedName = "ConnectionFactory")
-   private ConnectionFactory cf;
 
-   @Test
-   public void shouldBeAbleToiChange() throws Exception
-   {
-      Assert.assertNotNull(dlq);
-      
+// --------------------- Interface LoadableExtension ---------------------
 
-      Assert.assertNotNull(cf);
-   }
+    @Override
+    public void register(ExtensionBuilder builder)
+    {
+        builder.observer(DeploymentInterceptor.class);
+    }
 }
