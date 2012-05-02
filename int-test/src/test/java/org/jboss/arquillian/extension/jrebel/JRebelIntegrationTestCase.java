@@ -19,8 +19,6 @@ package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
 import org.junit.Test;
@@ -46,7 +44,7 @@ public class JRebelIntegrationTestCase {
     @Deployment
     public static WebArchive createWar()
     {
-        return ShrinkWrap.create(WebArchive.class, "jrebel-test.war").addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml").addClass(InjectableArtifact.class);
+        return Packager.warWithInjectableArtifact();
     }
 
 // -------------------------- OTHER METHODS --------------------------

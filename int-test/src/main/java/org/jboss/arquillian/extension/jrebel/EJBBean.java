@@ -17,30 +17,14 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.ejb.Stateless;
 
-@ApplicationScoped
-public class InjectableArtifact {
-// ------------------------------ FIELDS ------------------------------
-
-    private boolean valueSet;
-
-// --------------------- GETTER / SETTER METHODS ---------------------
-
-    public boolean isValueSet()
-    {
-        return valueSet;
-    }
-
-    public void setValueSet(boolean valueSet)
-    {
-        this.valueSet = valueSet;
-    }
-
+@Stateless
+public class EJBBean {
     /**
      * Run EARDeploymentTestCase once then uncomment this method and you will see that it gets hot deployed.
      */
-//    public String bar() {
-//        return "bar";
+//    public String foo() {
+//        return "foo";
 //    }
 }

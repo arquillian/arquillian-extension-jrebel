@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <!-- Parent -->
     <parent>
@@ -20,11 +20,6 @@
 
 
     <dependencies>
-        <dependency>
-            <groupId>org.jboss.arquillian.extension</groupId>
-            <artifactId>arquillian-jrebel-impl</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -55,6 +50,12 @@
             <version>1.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.ejb</groupId>
+            <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+            <version>1.0.1.Final</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -75,6 +76,16 @@
             </build>
         </profile>
         <profile>
+            <id>jrebel</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.jboss.arquillian.extension</groupId>
+                    <artifactId>arquillian-jrebel-impl</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>arq-jbossas-remote-5</id>
             <dependencies>
                 <dependency>
@@ -90,11 +101,10 @@
                     <type>pom</type>
                     <scope>provided</scope>
                 </dependency>
-
             </dependencies>
         </profile>
         <profile>
-            <id>arq-jbossas-remote-7</id>
+            <id>arq-jbossas-remote-7.1.0</id>
             <dependencies>
                 <dependency>
                     <groupId>org.jboss.as</groupId>
@@ -105,7 +115,7 @@
             </dependencies>
         </profile>
         <profile>
-            <id>arq-jbossas-remote-7.1</id>
+            <id>arq-jbossas-remote-7.1.1</id>
             <dependencies>
                 <dependency>
                     <groupId>org.jboss.as</groupId>

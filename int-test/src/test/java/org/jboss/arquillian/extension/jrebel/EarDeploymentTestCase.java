@@ -18,8 +18,10 @@
 package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,48 +30,48 @@ import org.junit.runner.RunWith;
 import javax.inject.Inject;
 
 @RunWith(Arquillian.class)
-public class MultipleDeploymentsTestCase {
+public class EarDeploymentTestCase {
 // ------------------------------ FIELDS ------------------------------
 
-    private static final String OTHER_WAR_WITH_INJECTABLE_ARTIFACT = "OtherWarWithInjectableArtifact";
-
-    private static final String WAR_WITH_INJECTABLE_ARTIFACT = "WarWithInjectableArtifact";
+    @Inject
+    EJBBean EJBBean;
 
     @Inject
     InjectableArtifact injectableArtifact;
 
 // -------------------------- STATIC METHODS --------------------------
 
-    @Deployment(name = WAR_WITH_INJECTABLE_ARTIFACT)
-    public static WebArchive createFirstArchive()
+    @Deployment
+    public static EnterpriseArchive createEar()
     {
-        return Packager.warWithInjectableArtifact();
-    }
-
-    @Deployment(name = OTHER_WAR_WITH_INJECTABLE_ARTIFACT)
-    public static WebArchive createSecondArchive()
-    {
-        return Packager.otherWarWithInjectableArtifact();
+        final JavaArchive ejbJar = Packager.ejbJar();
+        /**
+         * If we'd stuff test class into ejbJar then we wouldn't be able to inject stuff from webArchive
+         */
+//        ejbJar.addClass(EARDeploymentTestCase.class);
+        final WebArchive webArchive = Packager.warWithInjectableArtifact();
+        webArchive.addClass(EarDeploymentTestCase.class);
+        return ShrinkWrap.create(EnterpriseArchive.class, "jrebel-test.ear").addAsModule(ejbJar).addAsModule(webArchive);
     }
 
 // -------------------------- OTHER METHODS --------------------------
 
     @Test
-    @OperateOnDeployment(WAR_WITH_INJECTABLE_ARTIFACT)
-    public void injectableArtifactAvailable() throws Exception
+    public void shouldBeAbleToiChange() throws Exception
     {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
          */
+        Assert.assertNotNull(injectableArtifact);
+        Assert.assertNotNull(EJBBean);
         System.out.println(injectableArtifact);
-        Assert.assertNotNull(injectableArtifact);
-    }
-
-    @Test
-    @OperateOnDeployment(OTHER_WAR_WITH_INJECTABLE_ARTIFACT)
-    public void injectableArtifactAvailable2() throws Exception
-    {
-        Assert.assertNotNull(injectableArtifact);
+        System.out.println(EJBBean);
+        /**
+         * Run EARDeploymentTestCase once then uncomment following lines as well as corresponding methods in EJBBean and InjectableArtifact
+         * and you will see that it gets hot deployed.
+         */
+//        System.out.println(injectableArtifact.bar());
+//        System.out.println(EJBBean.foo());
     }
 }
