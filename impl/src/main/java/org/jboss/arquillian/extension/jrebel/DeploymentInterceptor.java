@@ -17,6 +17,11 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
+import java.io.File;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jboss.arquillian.container.spi.client.deployment.Deployment;
 import org.jboss.arquillian.container.spi.client.deployment.DeploymentDescription;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -30,14 +35,14 @@ import org.jboss.arquillian.core.api.InstanceProducer;
 import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.core.api.annotation.Observes;
 import org.jboss.arquillian.core.spi.EventContext;
+import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.Node;
+import org.jboss.shrinkwrap.api.asset.ArchiveAsset;
+import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
-import org.jboss.shrinkwrap.api.formatter.Formatters;
-
-import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 
 /**
  * DeploymentInterceptor
@@ -78,42 +83,23 @@ public class DeploymentInterceptor {
 
 // -------------------------- OTHER METHODS --------------------------
 
-    public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext)
+    public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext, TestClass testClass)
     {
         final Deployment deployment = eventContext.getEvent().getDeployment();
-        Archive<?> archive = deployment.getDescription().getTestableArchive();
-        File exportPath = new File(tempDirectory, archive.getName());
-        File metaDataFile = new File(tempDirectory, archive.getName() + ".meta");
+        Archive<?> testableArchive = deployment.getDescription().getTestableArchive();
+        Archive<?> archive = deployment.getDescription().getArchive();
+        final File explodedDeploymentDirectory = new File(
+            tempDirectory + "/" + testClass.getJavaClass().getCanonicalName() + "/" + eventContext.getEvent().getContainer().getName());
+        File exportPath = new File(explodedDeploymentDirectory, testableArchive.getName());
+        File metaDataFile = new File(explodedDeploymentDirectory, testableArchive.getName() + ".meta");
         boolean alreadyDeployed = exportPath.exists() && metaDataFile.exists();
         //noinspection ResultOfMethodCallIgnored
         exportPath.mkdirs();
-        archive.as(ExplodedExporter.class).exportExploded(tempDirectory);
-
 
         if (!alreadyDeployed) {
-            forcedUndeployment = true;
-            try {
-                event.fire(new UnDeployDeployment(eventContext.getEvent().getContainer(), deployment));
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Cannot undeploy " + deployment.getDescription().getName(), e);
-            } finally {
-                forcedUndeployment = false;
-            }
-//            TODO if rebel.xml already exists in the archive then don't add new one and don't do exploded export
-            String rebelXml = createRebelXML(exportPath);
-            archive.add(new StringAsset(rebelXml), "WEB-INF/classes/rebel.xml");
-
-            System.out.println(archive.toString(Formatters.VERBOSE));
-            System.out.println();
-            System.out.println(rebelXml);
-
-            eventContext.proceed();
-
-            HTTPContext httpContext = protocolMetaData.get().getContext(HTTPContext.class);
-            if (httpContext != null) {
-                Serializer.toStream(new SerializableHttpContextData(httpContext), metaDataFile);
-            }
+            processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive, explodedDeploymentDirectory, exportPath, metaDataFile);
         } else {
+            testableArchive.as(ExplodedExporter.class).exportExploded(explodedDeploymentDirectory);
             ProtocolMetaData metaData = new ProtocolMetaData();
             SerializableHttpContextData serializableHttpContextData = Serializer.toObject(SerializableHttpContextData.class, metaDataFile);
             metaData.addContext(serializableHttpContextData.toHTTPContext());
@@ -131,27 +117,90 @@ public class DeploymentInterceptor {
         }
     }
 
-    private String createRebelXML(File output)
+    /**
+     * If no rebel.xml file found in archive in appropriate locations then
+     * rebel.xml is generated.
+     *
+     * @param archive  archive to inspect and add rebel.xml to
+     * @param rootPath path to use when calculating exploded directory path
+     */
+    private void addRebelXmlIfNeeded(Archive<?> archive, String rootPath)
     {
+        final String path = rootPath + "/" + archive.getName();
+        if (archive.getName().endsWith(".war")) {
+            final String archivePath = "WEB-INF/classes/rebel.xml";
+            if (archive.get(archivePath) == null) {
+                archive.add(new StringAsset(createRebelXML(path, true)), archivePath);
+            }
+        } else {
+            final String archivePath = "rebel.xml";
+            if (archive.get(archivePath) == null) {
+                archive.add(new StringAsset(createRebelXML(path, false)), archivePath);
+            }
+        }
+    }
+
+    private String createRebelXML(String path, boolean forWebArchive)
+    {
+        String contents;
+        if (forWebArchive) {
+            contents = "<war dir=\"" + path + "\"/>\n";
+        } else {
+            contents = "<classpath><dir name=\"" + path + "\"/></classpath>";
+        }
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<application\n" +
             "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
             "  xmlns=\"http://www.zeroturnaround.com\"\n" +
             "  xsi:schemaLocation=\"http://www.zeroturnaround.com http://www.zeroturnaround.com/alderaan/rebel-2_0.xsd\">\n" +
-            "  <war dir=\"" + output.getAbsolutePath() + "\" />\n" +
-            /*
-                 "  <classpath>\n" +
-                 "    <dir name=\"" + output.getAbsolutePath() + "/WEB-INF/classes\"/>\n" +
-                 "  </classpath>\n" +
-                 "  <web>\n" +
-                 "    <link target=\"/\">\n" +
-                 "       <dir name=\"" + output.getAbsolutePath() + "/\"/>\n" +
-                 "    </link>\n" +
-               "    <link target=\"/WEB-INF\">\n" +
-               "       <dir name=\"" + output.getAbsolutePath() + "/WEB-INF/\"/>\n" +
-               "    </link>\n" +
-                 "  </web>\n" +
-                 */
+            contents +
             "</application>";
+    }
+
+    private void processArchiveAndProceedWithDeployment(EventContext<DeployDeployment> eventContext, Deployment deployment, Archive<?> testableArchive,
+                                                        Archive<?> archive, File explodedDeploymentDirectory, File exportPath, File metaDataFile)
+    {
+        forcedUndeployment = true;
+        try {
+            event.fire(new UnDeployDeployment(eventContext.getEvent().getContainer(), deployment));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Cannot undeploy " + deployment.getDescription().getName(), e);
+        } finally {
+            forcedUndeployment = false;
+        }
+        final String mainArchivePath = exportPath.getAbsolutePath();
+        if (!testableArchive.equals(archive)) {
+            for (Node node : testableArchive.getContent().values()) {
+                final Asset asset = node.getAsset();
+                if (asset instanceof ArchiveAsset) {
+                    if (archive.equals(((ArchiveAsset) asset).getArchive())) {
+                        addRebelXmlIfNeeded(archive, mainArchivePath + node.getPath().getParent().get());
+                        break;
+                    }
+                }
+            }
+        }
+        if (testableArchive.getName().endsWith(".war")) {
+            addRebelXmlIfNeeded(testableArchive, explodedDeploymentDirectory.getAbsolutePath());
+        } else if (testableArchive.getName().endsWith(".ear")) {
+            final EnterpriseArchive enterpriseArchive = (EnterpriseArchive) testableArchive;
+            final Set<Node> rootChildren = enterpriseArchive.get("/").getChildren();
+            for (Node node : rootChildren) {
+                final Asset asset = node.getAsset();
+                if (asset == null) {
+                    continue;
+                }
+                if (asset instanceof ArchiveAsset) {
+                    addRebelXmlIfNeeded(((ArchiveAsset) asset).getArchive(), mainArchivePath);
+                }
+            }
+        }
+        testableArchive.as(ExplodedExporter.class).exportExploded(explodedDeploymentDirectory);
+        eventContext.proceed();
+
+        HTTPContext httpContext = protocolMetaData.get().getContext(HTTPContext.class);
+        if (httpContext != null) {
+            Serializer.toStream(new SerializableHttpContextData(httpContext), metaDataFile);
+        }
     }
 }
