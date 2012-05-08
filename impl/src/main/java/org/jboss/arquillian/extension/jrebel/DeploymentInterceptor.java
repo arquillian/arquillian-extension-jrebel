@@ -17,6 +17,11 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
+import java.io.File;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jboss.arquillian.container.spi.client.deployment.Deployment;
 import org.jboss.arquillian.container.spi.client.deployment.DeploymentDescription;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -38,12 +43,6 @@ import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-
-import java.io.File;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * DeploymentInterceptor
@@ -128,7 +127,7 @@ public class DeploymentInterceptor {
     private void addRebelXmlIfNeeded(Archive<?> archive, String rootPath)
     {
         final String path = rootPath + "/" + archive.getName();
-        if (archive instanceof WebArchive) {
+        if (archive.getName().endsWith(".war")) {
             final String archivePath = "WEB-INF/classes/rebel.xml";
             if (archive.get(archivePath) == null) {
                 archive.add(new StringAsset(createRebelXML(path, true)), archivePath);
@@ -181,9 +180,9 @@ public class DeploymentInterceptor {
                 }
             }
         }
-        if (testableArchive instanceof WebArchive) {
+        if (testableArchive.getName().endsWith(".war")) {
             addRebelXmlIfNeeded(testableArchive, explodedDeploymentDirectory.getAbsolutePath());
-        } else if (testableArchive instanceof EnterpriseArchive) {
+        } else if (testableArchive.getName().endsWith(".ear")) {
             final EnterpriseArchive enterpriseArchive = (EnterpriseArchive) testableArchive;
             final Set<Node> rootChildren = enterpriseArchive.get("/").getChildren();
             for (Node node : rootChildren) {
