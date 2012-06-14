@@ -2,6 +2,7 @@ package org.jboss.arquillian.extension.jrebel.shrinkwrap;
 
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.ClassAsset;
+import org.jboss.shrinkwrap.api.asset.ClassLoaderAsset;
 import org.jboss.shrinkwrap.api.asset.FileAsset;
 
 import java.io.File;
@@ -13,6 +14,11 @@ public final class AssetHelper {
     public static Class<?> getClass(ClassAsset asset)
     {
         return (Class<?>) getFieldValueByReflection(asset, "clazz");
+    }
+
+    public static ClassLoader getClassLoader(ClassLoaderAsset asset)
+    {
+        return (ClassLoader) getFieldValueByReflection(asset, "classLoader");
     }
 
     private static Object getFieldValueByReflection(Asset asset, String fieldName)
@@ -31,6 +37,11 @@ public final class AssetHelper {
     public static File getFile(FileAsset asset)
     {
         return (File) getFieldValueByReflection(asset, "file");
+    }
+
+    public static String getResourceName(ClassLoaderAsset asset)
+    {
+        return (String) getFieldValueByReflection(asset, "resourceName");
     }
 
 // --------------------------- CONSTRUCTORS ---------------------------

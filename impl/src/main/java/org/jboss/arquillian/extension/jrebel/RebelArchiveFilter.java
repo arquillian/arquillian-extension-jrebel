@@ -19,13 +19,16 @@ package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveFilter;
 import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveHelper;
+import org.jboss.arquillian.extension.jrebel.shrinkwrap.AssetHelper;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.Node;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.ClassAsset;
+import org.jboss.shrinkwrap.api.asset.ClassLoaderAsset;
 import org.jboss.shrinkwrap.api.asset.FileAsset;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +86,8 @@ public class RebelArchiveFilter implements ArchiveFilter {
         for (Map.Entry<ArchivePath, Node> entry : archive.getContent().entrySet()) {
             node = entry.getValue();
             asset = node.getAsset();
-            if (asset instanceof FileAsset || asset instanceof ClassAsset) {
+            if (asset instanceof FileAsset || asset instanceof ClassAsset || (asset instanceof ClassLoaderAsset && isProperlyNestedClass(
+                (ClassLoaderAsset) asset))) {
                 fileOrClassAssets.put(entry.getKey(), asset);
             } else if (!ArchiveHelper.isNestedArchiveOfEAR(archive, node) && asset != null) {
                 nonFileNonClassAssets.put(entry.getKey(), asset);
@@ -103,5 +107,21 @@ public class RebelArchiveFilter implements ArchiveFilter {
         } else {
             return fileOrClassAssets.containsKey(node.getPath());
         }
+    }
+
+    private boolean isProperlyNestedClass(ClassLoaderAsset asset)
+    {
+        final ClassLoader classLoader = AssetHelper.getClassLoader(asset);
+        final String resourceName = AssetHelper.getResourceName(asset);
+        final URL resourceURL = classLoader.getResource(resourceName);
+        if (resourceURL == null) {
+            return false;
+        }
+        if (!"file".equals(resourceURL.getProtocol())) {
+            return false;
+        }
+        final String cwd = System.getProperty("user.dir");
+        final String resourcePath = resourceURL.getFile();
+        return resourcePath != null && resourcePath.startsWith(cwd);
     }
 }

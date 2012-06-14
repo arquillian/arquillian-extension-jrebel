@@ -22,6 +22,7 @@ import org.jboss.arquillian.extension.jrebel.shrinkwrap.AssetHelper;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.ClassAsset;
+import org.jboss.shrinkwrap.api.asset.ClassLoaderAsset;
 import org.jboss.shrinkwrap.api.asset.FileAsset;
 
 import java.io.File;
@@ -57,6 +58,12 @@ public final class RebelXmlHelper {
                 final String className = AssetHelper.getClass((ClassAsset) asset).getCanonicalName().replaceAll("\\.", "/");
                 includes.append("\n\t\t\t<include name=\"").append(className).append(".class\"/>");
                 includes.append("\n\t\t\t<include name=\"").append(className).append("$*.class\"/>");
+            } else if (asset instanceof ClassLoaderAsset) {
+                final String resourceName = AssetHelper.getResourceName((ClassLoaderAsset) asset);
+                includes.append("\n\t\t\t<include name=\"").append(resourceName).append("\"/>");
+                if (resourceName.endsWith(".class")) {
+                    includes.append("\n\t\t\t<include name=\"").append(resourceName.replaceAll("\\.class$", "\\$*.class")).append("\"/>");
+                }
             } else if (asset instanceof FileAsset) {
                 fileAssets.add((FileAsset) asset);
             }
@@ -93,11 +100,11 @@ public final class RebelXmlHelper {
             contents.append("\n\t<web>");
             contents.append("\n\t\t<link target=\"/\">");
             for (Map.Entry<String, List<String>> entry : RebelXmlHelper.rootize(fileAssets).entrySet()) {
-                contents.append("\n\t\t\t<dir name=\"").append(entry.getKey()).append("\">\n\t\t\t\t<includes>");
+                contents.append("\n\t\t\t<dir name=\"").append(entry.getKey()).append("\">");
                 for (String asset : entry.getValue()) {
-                    contents.append("\n\t\t\t\t\t<include name=\"").append(asset).append("\"/>");
+                    contents.append("\n\t\t\t\t<include name=\"").append(asset).append("\"/>");
                 }
-                contents.append("\n\t\t\t\t</includes>\n\t\t\t</dir>");
+                contents.append("\n\t\t\t</dir>");
             }
             contents.append("\n\t\t\t<dir name=\"").append(path).append("\"/>").append("\n\t\t</link>\n\t</web>\n");
         }
@@ -110,7 +117,7 @@ public final class RebelXmlHelper {
             "\n</application>";
     }
 
-    public static Map<String, List<String>> rootize(Collection<FileAsset> assets)
+    private static Map<String, List<String>> rootize(Collection<FileAsset> assets)
     {
         final File mainSources = new File("src/main");
         final List<String> rootPaths = new ArrayList<String>();

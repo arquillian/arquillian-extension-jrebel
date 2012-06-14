@@ -69,10 +69,11 @@ public class DeploymentInterceptorTest {
             .importDirectory(deploymentRootDir)
             .as(EnterpriseArchive.class);
 
-        Assert.assertEquals(5, explodedArchive.getContent().size());
+        Assert.assertEquals(21, explodedArchive.getContent().size());
         Assert.assertNotNull(explodedArchive.get("/test.war/WEB-INF/beans.xml"));
         Assert.assertNotNull(explodedArchive.get("/test.war/WEB-INF/classes/rebel.xml"));
-        Assert.assertNull(explodedArchive.get("/test.war/WEB-INF/classes/org"));
+        Assert.assertNotNull(explodedArchive.get("/test.war/WEB-INF/classes/org"));
+        Assert.assertNull(explodedArchive.get("/test.war/WEB-INF/classes/org/arquillian"));
     }
 
     @Test
@@ -101,9 +102,11 @@ public class DeploymentInterceptorTest {
             .importDirectory(deploymentRootDir)
             .as(WebArchive.class);
 
-        Assert.assertEquals(4, explodedArchive.getContent().size());
+        Assert.assertEquals(20, explodedArchive.getContent().size());
         Assert.assertNotNull(explodedArchive.get("/WEB-INF/beans.xml"));
         Assert.assertNotNull(explodedArchive.get("/WEB-INF/classes/rebel.xml"));
+        Assert.assertNotNull(explodedArchive.get("/WEB-INF/classes/org"));
+        Assert.assertNull(explodedArchive.get("/WEB-INF/classes/org/arquillian"));
     }
 
     private EventContext<DeployDeployment> createDeployEventContextMock(Archive<?> archive)
