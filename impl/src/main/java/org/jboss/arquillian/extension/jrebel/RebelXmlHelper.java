@@ -17,7 +17,6 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveHelper;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
@@ -34,6 +33,16 @@ import java.util.List;
 import java.util.Map;
 
 public final class RebelXmlHelper {
+// ------------------------------ FIELDS ------------------------------
+
+    private static final FileFilter DIRECTORY_FILTER = new FileFilter() {
+        @Override
+        public boolean accept(File pathname)
+        {
+            return pathname.isDirectory();
+        }
+    };
+
 // -------------------------- STATIC METHODS --------------------------
 
     public static String createRebelXML(Archive<?> archive, String path)
@@ -105,13 +114,13 @@ public final class RebelXmlHelper {
         final File mainSources = new File("src/main");
         final List<String> rootPaths = new ArrayList<String>();
         if (mainSources.exists()) {
-            for (File file : mainSources.listFiles((FileFilter) FileFilterUtils.directoryFileFilter())) {
+            for (File file : mainSources.listFiles(DIRECTORY_FILTER)) {
                 rootPaths.add(file.getAbsolutePath());
             }
         }
         final File testSources = new File("src/test");
         if (testSources.exists()) {
-            for (File file : testSources.listFiles((FileFilter) FileFilterUtils.directoryFileFilter())) {
+            for (File file : testSources.listFiles(DIRECTORY_FILTER)) {
                 rootPaths.add(file.getAbsolutePath());
             }
         }
