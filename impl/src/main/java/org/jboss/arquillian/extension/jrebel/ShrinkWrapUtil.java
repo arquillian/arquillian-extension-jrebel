@@ -28,12 +28,12 @@ import java.io.File;
 final class ShrinkWrapUtil {
 // -------------------------- STATIC METHODS --------------------------
 
-    public static File createTempDirectory()
+    public static File createTempDirectory(File root)
     {
         try {
-            File root = new File("target/jrebel-temp/"); //File.createTempFile("arquillian", "jrebel");
-            root.delete();
-            root.mkdirs();
+            if (!root.exists() && !root.mkdirs()) {
+                throw new RuntimeException("Cannot create directory " + root.getAbsolutePath());
+            }
             return root;
         } catch (Exception e) {
             throw new RuntimeException(e);

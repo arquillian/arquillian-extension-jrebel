@@ -17,34 +17,36 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
+import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.asset.FileAsset;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 import java.io.File;
 
 public final class Packager {
+// ------------------------------ FIELDS ------------------------------
+
+    public static final FileAsset SAMPLE_WEB_RESOURCE = new FileAsset(new File("src/test/resources/sampleWebResource.html"));
+
+    public static final FileAsset SAMPLE_WEB_RESOURCE2 = new FileAsset(new File("src/test/webapp/sampleWebResource2.html"));
+
 // -------------------------- STATIC METHODS --------------------------
 
-    public static JavaArchive ejbJar()
+    public static EnterpriseArchive createEnterpriseArchive()
     {
-        return ShrinkWrap.create(JavaArchive.class, "ejb.jar").addAsResource(EmptyAsset.INSTANCE, "beans.xml").addClass(EJBBean.class);
+        return ShrinkWrap.create(EnterpriseArchive.class, "test.ear").addAsModule(createWebArchive());
     }
 
-    public static WebArchive otherWarWithInjectableArtifact()
+    public static WebArchive createWebArchive()
     {
-        return ShrinkWrap.create(WebArchive.class, "otherWithInjectableArtifact.war")
+        return ShrinkWrap.create(WebArchive.class, "test.war")
+            .addClass(Serializer.class)
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
-            .addClass(InjectableArtifact.class);
-    }
-
-    public static WebArchive warWithInjectableArtifact()
-    {
-        return ShrinkWrap.create(WebArchive.class, "withInjectableArtifact.war")
-            .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
-            .addAsWebResource(new File("src/main/webapp/sampleWebResource.html"), "sampleWebResource.html")
-            .addClass(InjectableArtifact.class);
+            .addAsWebResource(SAMPLE_WEB_RESOURCE, ArchivePaths.create("sampleWebResource.html"))
+            .addAsWebResource(SAMPLE_WEB_RESOURCE2, ArchivePaths.create("sampleWebResource2.html"));
     }
 
 // --------------------------- CONSTRUCTORS ---------------------------

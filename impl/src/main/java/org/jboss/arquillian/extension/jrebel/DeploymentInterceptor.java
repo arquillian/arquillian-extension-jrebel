@@ -17,11 +17,6 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
-import java.io.File;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.jboss.arquillian.container.spi.client.deployment.Deployment;
 import org.jboss.arquillian.container.spi.client.deployment.DeploymentDescription;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -35,14 +30,20 @@ import org.jboss.arquillian.core.api.InstanceProducer;
 import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.core.api.annotation.Observes;
 import org.jboss.arquillian.core.spi.EventContext;
+import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveHelper;
+import org.jboss.arquillian.extension.jrebel.shrinkwrap.ExplodedFilterableExporter;
 import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.Node;
 import org.jboss.shrinkwrap.api.asset.ArchiveAsset;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
-import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
+
+import java.io.File;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * DeploymentInterceptor
@@ -72,24 +73,26 @@ public class DeploymentInterceptor {
     @DeploymentScoped
     private InstanceProducer<ProtocolMetaData> protocolMetaData;
 
-    private final File tempDirectory;
+    private File tempDirectory = new File("target" + File.separator + "jrebel-temp");
 
-// --------------------------- CONSTRUCTORS ---------------------------
+// --------------------- GETTER / SETTER METHODS ---------------------
 
-    public DeploymentInterceptor()
+    public File getTempDirectory()
     {
-        tempDirectory = ShrinkWrapUtil.createTempDirectory();
+        return tempDirectory;
     }
 
 // -------------------------- OTHER METHODS --------------------------
 
     public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext, TestClass testClass)
     {
-        final Deployment deployment = eventContext.getEvent().getDeployment();
+        tempDirectory = ShrinkWrapUtil.createTempDirectory(getTempDirectory());
+        final DeployDeployment event = eventContext.getEvent();
+        final Deployment deployment = event.getDeployment();
         Archive<?> testableArchive = deployment.getDescription().getTestableArchive();
         Archive<?> archive = deployment.getDescription().getArchive();
         final File explodedDeploymentDirectory = new File(
-            tempDirectory + "/" + testClass.getJavaClass().getCanonicalName() + "/" + eventContext.getEvent().getContainer().getName());
+            tempDirectory + File.separator + testClass.getJavaClass().getCanonicalName() + File.separator + event.getContainer().getName());
         File exportPath = new File(explodedDeploymentDirectory, testableArchive.getName());
         File metaDataFile = new File(explodedDeploymentDirectory, testableArchive.getName() + ".meta");
         boolean alreadyDeployed = exportPath.exists() && metaDataFile.exists();
@@ -99,7 +102,7 @@ public class DeploymentInterceptor {
         if (!alreadyDeployed) {
             processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive, explodedDeploymentDirectory, exportPath, metaDataFile);
         } else {
-            testableArchive.as(ExplodedExporter.class).exportExploded(explodedDeploymentDirectory);
+            testableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
             ProtocolMetaData metaData = new ProtocolMetaData();
             SerializableHttpContextData serializableHttpContextData = Serializer.toObject(SerializableHttpContextData.class, metaDataFile);
             metaData.addContext(serializableHttpContextData.toHTTPContext());
@@ -110,6 +113,7 @@ public class DeploymentInterceptor {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void onUnDeploy(@Observes EventContext<UnDeployDeployment> eventContext)
     {
         if (forcedUndeployment) {
@@ -127,34 +131,10 @@ public class DeploymentInterceptor {
     private void addRebelXmlIfNeeded(Archive<?> archive, String rootPath)
     {
         final String path = rootPath + "/" + archive.getName();
-        if (archive.getName().endsWith(".war")) {
-            final String archivePath = "WEB-INF/classes/rebel.xml";
-            if (archive.get(archivePath) == null) {
-                archive.add(new StringAsset(createRebelXML(path, true)), archivePath);
-            }
-        } else {
-            final String archivePath = "rebel.xml";
-            if (archive.get(archivePath) == null) {
-                archive.add(new StringAsset(createRebelXML(path, false)), archivePath);
-            }
+        final String archivePath = ArchiveHelper.isWebArchive(archive) ? "WEB-INF/classes/rebel.xml" : "rebel.xml";
+        if (archive.get(archivePath) == null) {
+            archive.add(new StringAsset(RebelXmlHelper.createRebelXML(archive, path)), archivePath);
         }
-    }
-
-    private String createRebelXML(String path, boolean forWebArchive)
-    {
-        String contents;
-        if (forWebArchive) {
-            contents = "<war dir=\"" + path + "\"/>\n";
-        } else {
-            contents = "<classpath><dir name=\"" + path + "\"/></classpath>";
-        }
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<application\n" +
-            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-            "  xmlns=\"http://www.zeroturnaround.com\"\n" +
-            "  xsi:schemaLocation=\"http://www.zeroturnaround.com http://www.zeroturnaround.com/alderaan/rebel-2_0.xsd\">\n" +
-            contents +
-            "</application>";
     }
 
     private void processArchiveAndProceedWithDeployment(EventContext<DeployDeployment> eventContext, Deployment deployment, Archive<?> testableArchive,
@@ -180,9 +160,9 @@ public class DeploymentInterceptor {
                 }
             }
         }
-        if (testableArchive.getName().endsWith(".war")) {
+        if (ArchiveHelper.isWebArchive(testableArchive)) {
             addRebelXmlIfNeeded(testableArchive, explodedDeploymentDirectory.getAbsolutePath());
-        } else if (testableArchive.getName().endsWith(".ear")) {
+        } else if (ArchiveHelper.isEarArchive(testableArchive)) {
             final EnterpriseArchive enterpriseArchive = (EnterpriseArchive) testableArchive;
             final Set<Node> rootChildren = enterpriseArchive.get("/").getChildren();
             for (Node node : rootChildren) {
@@ -195,7 +175,7 @@ public class DeploymentInterceptor {
                 }
             }
         }
-        testableArchive.as(ExplodedExporter.class).exportExploded(explodedDeploymentDirectory);
+        testableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
         eventContext.proceed();
 
         HTTPContext httpContext = protocolMetaData.get().getContext(HTTPContext.class);

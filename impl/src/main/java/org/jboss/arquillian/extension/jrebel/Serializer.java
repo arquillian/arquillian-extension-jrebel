@@ -17,7 +17,6 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,18 +45,6 @@ final class Serializer {
             return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException("Could not serialize object: " + object, e);
-        }
-    }
-
-    public static <T> T toObject(Class<T> type, byte[] objectArray)
-    {
-        try {
-            ObjectInputStream outObj = new ObjectInputStream(new ByteArrayInputStream(objectArray));
-            Object object = outObj.readObject();
-
-            return type.cast(object);
-        } catch (Exception e) {
-            throw new RuntimeException("Could not deserialize object: " + objectArray, e);
         }
     }
 
