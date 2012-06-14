@@ -34,15 +34,9 @@
             <artifactId>arquillian-container-impl-base</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.shrinkwrap</groupId>
-            <artifactId>shrinkwrap-api</artifactId>
-            <version>1.1.0-alpha-2</version>
-        </dependency>
-        <dependency>
             <!--This dependency is until filterable exploded exporter gets into shrinkwrap-->
             <groupId>org.jboss.shrinkwrap</groupId>
             <artifactId>shrinkwrap-impl-base</artifactId>
-            <version>1.1.0-alpha-2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -18,6 +18,7 @@
 package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveHelper;
+import org.jboss.arquillian.extension.jrebel.shrinkwrap.AssetHelper;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.ClassAsset;
@@ -53,7 +54,7 @@ public final class RebelXmlHelper {
         final StringBuilder includes = new StringBuilder();
         for (Asset asset : archiveFilter.getFileOrClassAssets()) {
             if (asset instanceof ClassAsset) {
-                final String className = ((ClassAsset) asset).getSource().getCanonicalName().replaceAll("\\.", "/");
+                final String className = AssetHelper.getClass((ClassAsset) asset).getCanonicalName().replaceAll("\\.", "/");
                 includes.append("\n\t\t\t<include name=\"").append(className).append(".class\"/>");
                 includes.append("\n\t\t\t<include name=\"").append(className).append("$*.class\"/>");
             } else if (asset instanceof FileAsset) {
@@ -131,7 +132,7 @@ public final class RebelXmlHelper {
 
         final HashMap<String, List<String>> rootizedAssets = new HashMap<String, List<String>>();
         for (FileAsset asset : assets) {
-            final File file = asset.getSource();
+            final File file = AssetHelper.getFile(asset);
             final String parentPath = file.getParentFile().getAbsolutePath();
             boolean rootPathFound = false;
             for (String rootPath : rootPaths) {
