@@ -43,6 +43,14 @@ public final class Packager {
         return ShrinkWrap.create(EnterpriseArchive.class, "test.ear").addAsModule(createWebArchive());
     }
 
+    public static WebArchive createFullyReloadableWebArchive()
+    {
+        return ShrinkWrap.create(WebArchive.class, "fullyReloadableWebArchive.war")
+            .addPackages(true, Fake1.class.getPackage())
+            .addAsWebResource(SAMPLE_WEB_RESOURCE, ArchivePaths.create("sampleWebResource.html"))
+            .addAsWebResource(SAMPLE_WEB_RESOURCE2, ArchivePaths.create("sampleWebResource2.html"));
+    }
+
     public static WebArchive createWebArchive()
     {
         return ShrinkWrap.create(WebArchive.class, "test.war")

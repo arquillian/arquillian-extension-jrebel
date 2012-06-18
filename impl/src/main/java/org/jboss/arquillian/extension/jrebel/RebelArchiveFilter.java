@@ -77,6 +77,11 @@ public class RebelArchiveFilter implements ArchiveFilter {
         return nonFileNonClassAssets.values();
     }
 
+    public boolean isRebelXmlTheOnlyNonFileNonClassAsset()
+    {
+        return nonFileNonClassAssets.size() == 1 && nonFileNonClassAssets.keySet().iterator().next().get().endsWith("rebel.xml");
+    }
+
     private void filter()
     {
         fileOrClassAssets = new HashMap<ArchivePath, Asset>();

@@ -44,6 +44,27 @@ public class DeploymentInterceptorTest {
 // -------------------------- OTHER METHODS --------------------------
 
     @Test
+    public void skipEmptyExplode() throws IOException
+    {
+        final Archive<?> archive = Packager.createFullyReloadableWebArchive();
+        final DeploymentInterceptor deploymentInterceptor = createDeploymentInterceptorMock();
+        final File tempDirectory = deploymentInterceptor.getTempDirectory();
+        FileUtils.deleteDirectory(tempDirectory);
+        ShrinkWrapUtil.createTempDirectory(tempDirectory);
+        final String jrebelExtRoot = tempDirectory.getPath();
+        final String deploymentRoot = jrebelExtRoot + "/" + DeploymentInterceptorTest.class.getCanonicalName() + "/mock/fullyReloadableWebArchive.war";
+
+        final File jrebelExtRootDir = new File(jrebelExtRoot);
+        Assert.assertTrue(jrebelExtRootDir.exists());
+        final File deploymentRootDir = new File(deploymentRoot);
+        Assert.assertFalse(deploymentRootDir.exists());
+
+        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive), new TestClass(DeploymentInterceptorTest.class));
+
+        Assert.assertFalse(deploymentRootDir.exists());
+    }
+
+    @Test
     public void testExplodedEnterpriseArchive() throws IOException
     {
         final Archive<?> archive = Packager.createEnterpriseArchive();
