@@ -51,6 +51,14 @@ public class EarDeploymentTestCase {
 //        ejbJar.addClass(EARDeploymentTestCase.class);
         final WebArchive webArchive = Packager.warWithInjectableArtifact();
         webArchive.addClass(EarDeploymentTestCase.class);
+        /**
+         * After first test run look at http://localhost:8080/withInjectableArtifact/dynamic.html.
+         * It should return 404.
+         * Then uncomment first line and run tests, now under the URL should be empty page.
+         * Finaly uncomment second line, run tests and refresh the page. It should say "Hello".
+         */
+//        webArchive.addAsWebResource(EmptyAsset.INSTANCE, ArchivePaths.create("dynamic.html"));
+//        webArchive.addAsWebResource(new StringAsset("Hello"), ArchivePaths.create("dynamic.html"));
         return ShrinkWrap.create(EnterpriseArchive.class, "jrebel-test.ear").addAsModule(ejbJar).addAsModule(webArchive);
     }
 
@@ -71,7 +79,7 @@ public class EarDeploymentTestCase {
          * Run EARDeploymentTestCase once then uncomment following lines as well as corresponding methods in EJBBean and InjectableArtifact
          * and you will see that it gets hot deployed.
          */
-//        System.out.println(injectableArtifact.bar());
 //        System.out.println(EJBBean.foo());
+//        System.out.println(injectableArtifact.bar());
     }
 }

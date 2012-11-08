@@ -22,7 +22,9 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
-public class Packager {
+import java.io.File;
+
+public final class Packager {
 // -------------------------- STATIC METHODS --------------------------
 
     public static JavaArchive ejbJar()
@@ -41,6 +43,7 @@ public class Packager {
     {
         return ShrinkWrap.create(WebArchive.class, "withInjectableArtifact.war")
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
+            .addAsWebResource(new File("src/main/webapp/sampleWebResource.html"), "sampleWebResource.html")
             .addClass(InjectableArtifact.class);
     }
 

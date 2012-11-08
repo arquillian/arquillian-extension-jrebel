@@ -17,11 +17,6 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
-import java.io.File;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.jboss.arquillian.container.spi.client.deployment.Deployment;
 import org.jboss.arquillian.container.spi.client.deployment.DeploymentDescription;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -35,14 +30,20 @@ import org.jboss.arquillian.core.api.InstanceProducer;
 import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.core.api.annotation.Observes;
 import org.jboss.arquillian.core.spi.EventContext;
+import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveHelper;
+import org.jboss.arquillian.extension.jrebel.shrinkwrap.ExplodedFilterableExporter;
 import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.Node;
 import org.jboss.shrinkwrap.api.asset.ArchiveAsset;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
-import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
+
+import java.io.File;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * DeploymentInterceptor
@@ -72,36 +73,39 @@ public class DeploymentInterceptor {
     @DeploymentScoped
     private InstanceProducer<ProtocolMetaData> protocolMetaData;
 
-    private final File tempDirectory;
+    private File tempDirectory = new File("target" + File.separator + "jrebel-temp");
 
-// --------------------------- CONSTRUCTORS ---------------------------
+// --------------------- GETTER / SETTER METHODS ---------------------
 
-    public DeploymentInterceptor()
+    public File getTempDirectory()
     {
-        tempDirectory = ShrinkWrapUtil.createTempDirectory();
+        return tempDirectory;
     }
 
 // -------------------------- OTHER METHODS --------------------------
 
     public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext, TestClass testClass)
     {
-        final Deployment deployment = eventContext.getEvent().getDeployment();
+        tempDirectory = ShrinkWrapUtil.createTempDirectory(getTempDirectory());
+        final DeployDeployment event = eventContext.getEvent();
+        final Deployment deployment = event.getDeployment();
         Archive<?> testableArchive = deployment.getDescription().getTestableArchive();
         Archive<?> archive = deployment.getDescription().getArchive();
         final File explodedDeploymentDirectory = new File(
-            tempDirectory + "/" + testClass.getJavaClass().getCanonicalName() + "/" + eventContext.getEvent().getContainer().getName());
-        File exportPath = new File(explodedDeploymentDirectory, testableArchive.getName());
+            tempDirectory + File.separator + testClass.getJavaClass().getCanonicalName() + File.separator + event.getContainer().getName());
+        final File mainArchiveDirectory = new File(explodedDeploymentDirectory, testableArchive.getName());
+        final String mainArchivePath = mainArchiveDirectory.getAbsolutePath();
         File metaDataFile = new File(explodedDeploymentDirectory, testableArchive.getName() + ".meta");
-        boolean alreadyDeployed = exportPath.exists() && metaDataFile.exists();
-        //noinspection ResultOfMethodCallIgnored
-        exportPath.mkdirs();
+        boolean alreadyDeployed = mainArchiveDirectory.exists() && metaDataFile.exists();
 
         if (!alreadyDeployed) {
-            processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive, explodedDeploymentDirectory, exportPath, metaDataFile);
+            processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive, explodedDeploymentDirectory, mainArchivePath,
+                metaDataFile);
         } else {
-            testableArchive.as(ExplodedExporter.class).exportExploded(explodedDeploymentDirectory);
-            ProtocolMetaData metaData = new ProtocolMetaData();
             SerializableHttpContextData serializableHttpContextData = Serializer.toObject(SerializableHttpContextData.class, metaDataFile);
+            explodeIfNeeded(testableArchive, archive, explodedDeploymentDirectory, serializableHttpContextData.isRebelXmlGenerated());
+            testableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
+            ProtocolMetaData metaData = new ProtocolMetaData();
             metaData.addContext(serializableHttpContextData.toHTTPContext());
             protocolMetaData.set(metaData);
             deployment.deployed();
@@ -110,6 +114,7 @@ public class DeploymentInterceptor {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void onUnDeploy(@Observes EventContext<UnDeployDeployment> eventContext)
     {
         if (forcedUndeployment) {
@@ -123,42 +128,82 @@ public class DeploymentInterceptor {
      *
      * @param archive  archive to inspect and add rebel.xml to
      * @param rootPath path to use when calculating exploded directory path
+     *
+     * @return true if rebel.xml was generated; false otherwise
      */
-    private void addRebelXmlIfNeeded(Archive<?> archive, String rootPath)
+    private boolean addRebelXmlIfNeeded(Archive<?> archive, String rootPath)
     {
         final String path = rootPath + "/" + archive.getName();
-        if (archive.getName().endsWith(".war")) {
-            final String archivePath = "WEB-INF/classes/rebel.xml";
-            if (archive.get(archivePath) == null) {
-                archive.add(new StringAsset(createRebelXML(path, true)), archivePath);
-            }
-        } else {
-            final String archivePath = "rebel.xml";
-            if (archive.get(archivePath) == null) {
-                archive.add(new StringAsset(createRebelXML(path, false)), archivePath);
-            }
+        final String archivePath = ArchiveHelper.isWebArchive(archive) ? "WEB-INF/classes/rebel.xml" : "rebel.xml";
+        if (archive.get(archivePath) == null) {
+            archive.add(new StringAsset(RebelXmlHelper.createRebelXML(archive, path)), archivePath);
+            return true;
         }
+        return false;
     }
 
-    private String createRebelXML(String path, boolean forWebArchive)
+    private boolean addRebelXmlIfNeededToEarModules(EnterpriseArchive enterpriseArchive, String mainArchivePath)
     {
-        String contents;
-        if (forWebArchive) {
-            contents = "<war dir=\"" + path + "\"/>\n";
-        } else {
-            contents = "<classpath><dir name=\"" + path + "\"/></classpath>";
+        boolean rebelXmlGenerated = false;
+        final Set<Node> rootChildren = enterpriseArchive.get("/").getChildren();
+        for (Node node : rootChildren) {
+            final Asset asset = node.getAsset();
+            if (asset == null) {
+                continue;
+            }
+            if (asset instanceof ArchiveAsset) {
+                rebelXmlGenerated |= addRebelXmlIfNeeded(((ArchiveAsset) asset).getArchive(), mainArchivePath);
+            }
         }
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<application\n" +
-            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-            "  xmlns=\"http://www.zeroturnaround.com\"\n" +
-            "  xsi:schemaLocation=\"http://www.zeroturnaround.com http://www.zeroturnaround.com/alderaan/rebel-2_0.xsd\">\n" +
-            contents +
-            "</application>";
+        return rebelXmlGenerated;
     }
 
+    private boolean addRebelXmlIfNeededToEmbeddedEjbJar(Archive<?> testableArchive, Archive<?> archive, String mainArchivePath)
+    {
+        for (Node node : testableArchive.getContent().values()) {
+            final Asset asset = node.getAsset();
+            if (asset instanceof ArchiveAsset) {
+                if (archive.equals(((ArchiveAsset) asset).getArchive())) {
+                    return addRebelXmlIfNeeded(archive, mainArchivePath + node.getPath().getParent().get());
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Export archive as exploded directory only if rebel.xml was not generated by this extension and it's the only dynamically generated asset in the archive.
+     *
+     * @param testableArchive             archive being deployed
+     * @param archive                     archive being tested
+     * @param explodedDeploymentDirectory directory (parent) to which archive should be exported
+     * @param rebelXmlGenerated           flag telling if rebel.xml was generated by this extension
+     */
+    private void explodeIfNeeded(Archive<?> testableArchive, Archive<?> archive, File explodedDeploymentDirectory, boolean rebelXmlGenerated)
+    {
+        final RebelArchiveFilter rebelArchiveFilter = new RebelArchiveFilter(archive);
+        if (rebelXmlGenerated && (ArchiveHelper.isEarArchive(archive) || !rebelArchiveFilter.isRebelXmlTheOnlyNonFileNonClassAsset())) {
+            //noinspection ResultOfMethodCallIgnored
+            explodedDeploymentDirectory.mkdirs();
+            testableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, rebelArchiveFilter);
+        }
+    }
+
+    /**
+     * Check if any archive or it's submodules needs to have rebel.xml generated,
+     * export archive with assets that cannot be referenced from disk,
+     * proceed with deployment and store metadata.
+     *
+     * @param eventContext                deployment event context
+     * @param deployment                  deployment data
+     * @param testableArchive             archive being deployed
+     * @param archive                     archive being tested
+     * @param explodedDeploymentDirectory directory (parent) to which archive should be exported
+     * @param mainArchivePath             path to top exploded archive
+     * @param metaDataFile                file to store metadata in
+     */
     private void processArchiveAndProceedWithDeployment(EventContext<DeployDeployment> eventContext, Deployment deployment, Archive<?> testableArchive,
-                                                        Archive<?> archive, File explodedDeploymentDirectory, File exportPath, File metaDataFile)
+                                                        Archive<?> archive, File explodedDeploymentDirectory, final String mainArchivePath, File metaDataFile)
     {
         forcedUndeployment = true;
         try {
@@ -168,39 +213,23 @@ public class DeploymentInterceptor {
         } finally {
             forcedUndeployment = false;
         }
-        final String mainArchivePath = exportPath.getAbsolutePath();
+        boolean rebelXmlGenerated = false;
+
         if (!testableArchive.equals(archive)) {
-            for (Node node : testableArchive.getContent().values()) {
-                final Asset asset = node.getAsset();
-                if (asset instanceof ArchiveAsset) {
-                    if (archive.equals(((ArchiveAsset) asset).getArchive())) {
-                        addRebelXmlIfNeeded(archive, mainArchivePath + node.getPath().getParent().get());
-                        break;
-                    }
-                }
-            }
+            rebelXmlGenerated = addRebelXmlIfNeededToEmbeddedEjbJar(testableArchive, archive, mainArchivePath);
         }
-        if (testableArchive.getName().endsWith(".war")) {
-            addRebelXmlIfNeeded(testableArchive, explodedDeploymentDirectory.getAbsolutePath());
-        } else if (testableArchive.getName().endsWith(".ear")) {
-            final EnterpriseArchive enterpriseArchive = (EnterpriseArchive) testableArchive;
-            final Set<Node> rootChildren = enterpriseArchive.get("/").getChildren();
-            for (Node node : rootChildren) {
-                final Asset asset = node.getAsset();
-                if (asset == null) {
-                    continue;
-                }
-                if (asset instanceof ArchiveAsset) {
-                    addRebelXmlIfNeeded(((ArchiveAsset) asset).getArchive(), mainArchivePath);
-                }
-            }
+        if (ArchiveHelper.isWebArchive(testableArchive)) {
+            rebelXmlGenerated |= addRebelXmlIfNeeded(testableArchive, explodedDeploymentDirectory.getAbsolutePath());
+        } else if (ArchiveHelper.isEarArchive(testableArchive)) {
+            rebelXmlGenerated = addRebelXmlIfNeededToEarModules((EnterpriseArchive) testableArchive, mainArchivePath);
         }
-        testableArchive.as(ExplodedExporter.class).exportExploded(explodedDeploymentDirectory);
+        explodeIfNeeded(testableArchive, archive, explodedDeploymentDirectory, rebelXmlGenerated);
+
         eventContext.proceed();
 
         HTTPContext httpContext = protocolMetaData.get().getContext(HTTPContext.class);
         if (httpContext != null) {
-            Serializer.toStream(new SerializableHttpContextData(httpContext), metaDataFile);
+            Serializer.toStream(new SerializableHttpContextData(httpContext, rebelXmlGenerated), metaDataFile);
         }
     }
 }

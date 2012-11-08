@@ -57,6 +57,7 @@ public class JRebelIntegrationTestCase {
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
          */
         System.out.println(injectableArtifact);
+//        System.out.println(injectableArtifact.bar());
         Assert.assertNotNull(injectableArtifact);
     }
 }

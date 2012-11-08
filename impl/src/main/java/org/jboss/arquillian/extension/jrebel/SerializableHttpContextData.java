@@ -17,11 +17,11 @@
  */
 package org.jboss.arquillian.extension.jrebel;
 
+import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
 
 public class SerializableHttpContextData implements Serializable {
 // ------------------------------ FIELDS ------------------------------
@@ -32,11 +32,13 @@ public class SerializableHttpContextData implements Serializable {
 
     private int port;
 
+    private boolean rebelXmlGenerated;
+
     private Set<Servlet> servlets;
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
-    public SerializableHttpContextData(HTTPContext context)
+    public SerializableHttpContextData(HTTPContext context, boolean rebelXmlGenerated)
     {
         name = context.getName();
         host = context.getHost();
@@ -44,6 +46,7 @@ public class SerializableHttpContextData implements Serializable {
         for (org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet servlet : context.getServlets()) {
             getServlets().add(new Servlet(servlet.getName(), servlet.getContextRoot()));
         }
+        this.rebelXmlGenerated = rebelXmlGenerated;
     }
 
 // --------------------- GETTER / SETTER METHODS ---------------------
@@ -54,6 +57,11 @@ public class SerializableHttpContextData implements Serializable {
             servlets = new HashSet<Servlet>();
         }
         return servlets;
+    }
+
+    public boolean isRebelXmlGenerated()
+    {
+        return rebelXmlGenerated;
     }
 
 // -------------------------- OTHER METHODS --------------------------
