@@ -20,6 +20,7 @@ package org.jboss.arquillian.extension.jrebel;
 import org.jboss.arquillian.extension.jrebel.shrinkwrap.ArchiveHelper;
 import org.jboss.arquillian.extension.jrebel.shrinkwrap.AssetHelper;
 import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.Node;
 import org.jboss.shrinkwrap.api.asset.Asset;
 import org.jboss.shrinkwrap.api.asset.ClassAsset;
 import org.jboss.shrinkwrap.api.asset.ClassLoaderAsset;
@@ -51,9 +52,10 @@ public final class RebelXmlHelper {
     {
         StringBuilder contents = new StringBuilder();
         final RebelArchiveFilter archiveFilter = new RebelArchiveFilter(archive);
-        final List<FileAsset> fileAssets = new ArrayList<FileAsset>();
+        final List<Node> fileNodes = new ArrayList<Node>();
         final StringBuilder includes = new StringBuilder();
-        for (Asset asset : archiveFilter.getFileOrClassAssets()) {
+        for (Node node : archiveFilter.getFileOrClassNodes()) {
+            final Asset asset = node.getAsset();
             if (asset instanceof ClassAsset) {
                 final String className = AssetHelper.getClass((ClassAsset) asset).getCanonicalName().replaceAll("\\.", "/");
                 includes.append("\n\t\t\t<include name=\"").append(className).append(".class\"/>");
@@ -65,7 +67,7 @@ public final class RebelXmlHelper {
                     includes.append("\n\t\t\t<include name=\"").append(resourceName.replaceAll("\\.class$", "\\$*.class")).append("\"/>");
                 }
             } else if (asset instanceof FileAsset) {
-                fileAssets.add((FileAsset) asset);
+                fileNodes.add(node);
             }
         }
         final String targetDirectory;
@@ -99,7 +101,7 @@ public final class RebelXmlHelper {
         if (ArchiveHelper.isWebArchive(archive)) {
             contents.append("\n\t<web>");
             contents.append("\n\t\t<link target=\"/\">");
-            for (Map.Entry<String, List<String>> entry : RebelXmlHelper.rootize(fileAssets).entrySet()) {
+            for (Map.Entry<String, List<String>> entry : RebelXmlHelper.rootize(fileNodes).entrySet()) {
                 contents.append("\n\t\t\t<dir name=\"").append(entry.getKey()).append("\">");
                 for (String asset : entry.getValue()) {
                     contents.append("\n\t\t\t\t<include name=\"").append(asset).append("\"/>");
@@ -117,45 +119,25 @@ public final class RebelXmlHelper {
             "\n</application>";
     }
 
-    private static Map<String, List<String>> rootize(Collection<FileAsset> assets)
+    /**
+     * Creates map of root path and sub paths of resources contained in that root path.
+     *
+     * @param nodes nodes holding FileAssets
+     *
+     * @return rootized map
+     */
+    private static Map<String, List<String>> rootize(Collection<Node> nodes)
     {
-        final File mainSources = new File("src/main");
-        final List<String> rootPaths = new ArrayList<String>();
-        if (mainSources.exists()) {
-            for (File file : mainSources.listFiles(DIRECTORY_FILTER)) {
-                rootPaths.add(file.getAbsolutePath());
-            }
-        }
-        final File testSources = new File("src/test");
-        if (testSources.exists()) {
-            for (File file : testSources.listFiles(DIRECTORY_FILTER)) {
-                rootPaths.add(file.getAbsolutePath());
-            }
-        }
-        rootPaths.add(mainSources.getAbsolutePath());
-        rootPaths.add(testSources.getAbsolutePath());
-        rootPaths.add(new File("src").getAbsolutePath());
-        rootPaths.add(new File("target").getAbsolutePath());
-
+        final Rootizer rootizer = new Rootizer();
         final HashMap<String, List<String>> rootizedAssets = new HashMap<String, List<String>>();
-        for (FileAsset asset : assets) {
-            final File file = AssetHelper.getFile(asset);
-            final String parentPath = file.getParentFile().getAbsolutePath();
-            boolean rootPathFound = false;
-            for (String rootPath : rootPaths) {
-                if (parentPath.startsWith(rootPath)) {
-                    rootPathFound = true;
-                    List<String> fileAssets = rootizedAssets.get(rootPath);
-                    if (fileAssets == null) {
-                        fileAssets = new ArrayList<String>();
-                        rootizedAssets.put(rootPath, fileAssets);
-                    }
-                    fileAssets.add(file.getAbsolutePath().substring(rootPath.length()));
-                    break;
+        for (Node node : nodes) {
+            final Rootizer.RootizedPath rootizedPath = rootizer.rootize(node);
+            if (rootizedPath != null) {
+                List<String> fileAssets = rootizedAssets.get(rootizedPath.getRoot());
+                if (fileAssets == null) {
+                    fileAssets = new ArrayList<String>();
+                    rootizedAssets.put(rootizedPath.getRoot(), fileAssets);
                 }
-            }
-            if (!rootPathFound) {
-                throw new IllegalArgumentException("File " + file.getAbsolutePath() + " is not under any allowed root " + rootPaths);
             }
         }
         return rootizedAssets;
@@ -165,5 +147,100 @@ public final class RebelXmlHelper {
 
     private RebelXmlHelper()
     {
+    }
+
+// -------------------------- INNER CLASSES --------------------------
+
+    public static class Rootizer {
+// ------------------------------ FIELDS ------------------------------
+
+        private final List<String> rootPaths = new ArrayList<String>();
+
+// --------------------------- CONSTRUCTORS ---------------------------
+
+        public Rootizer()
+        {
+            final File mainSources = new File("src/main");
+
+            if (mainSources.exists()) {
+                for (File file : mainSources.listFiles(DIRECTORY_FILTER)) {
+                    rootPaths.add(file.getAbsolutePath());
+                }
+            }
+            final File testSources = new File("src/test");
+            if (testSources.exists()) {
+                for (File file : testSources.listFiles(DIRECTORY_FILTER)) {
+                    rootPaths.add(file.getAbsolutePath());
+                }
+            }
+            rootPaths.add(mainSources.getAbsolutePath());
+            rootPaths.add(testSources.getAbsolutePath());
+            rootPaths.add(new File("src").getAbsolutePath());
+            rootPaths.add(new File("target").getAbsolutePath());
+        }
+
+// -------------------------- OTHER METHODS --------------------------
+
+        public RootizedPath rootize(Node node)
+        {
+            final Asset asset = node.getAsset();
+            if (!(asset instanceof FileAsset)) {
+                return null;
+            }
+            FileAsset fileAsset = (FileAsset) asset;
+            final File file = AssetHelper.getFile(fileAsset);
+            final String parentPath = file.getParentFile().getAbsolutePath();
+            for (String rootPath : rootPaths) {
+                if (parentPath.startsWith(rootPath)) {
+                    final String subPath = file.getAbsolutePath().substring(rootPath.length());
+                    if (subPath.equals(node.getPath().get())) {
+                        return new RootizedPath(parentPath, subPath);
+                    }
+                    break;
+                }
+            }
+            return null;
+        }
+
+// -------------------------- INNER CLASSES --------------------------
+
+        public static class RootizedPath {
+// ------------------------------ FIELDS ------------------------------
+
+            private final String path;
+
+            private final String root;
+
+// --------------------------- CONSTRUCTORS ---------------------------
+
+            public RootizedPath(String root, String path)
+            {
+                this.root = root;
+                this.path = path;
+            }
+
+// --------------------- GETTER / SETTER METHODS ---------------------
+
+            public String getPath()
+            {
+                return path;
+            }
+
+            public String getRoot()
+            {
+                return root;
+            }
+
+// ------------------------ CANONICAL METHODS ------------------------
+
+            @Override
+            public String toString()
+            {
+                return "RootizedPath{" +
+                    "path='" + path + '\'' +
+                    ", root='" + root + '\'' +
+                    '}';
+            }
+        }
     }
 }

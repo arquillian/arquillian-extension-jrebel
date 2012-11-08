@@ -18,8 +18,8 @@
 package org.jboss.arquillian.extension.jrebel;
 
 import org.apache.commons.io.DirectoryWalker;
-import org.apache.commons.io.comparator.SizeFileComparator;
 import org.jboss.arquillian.extension.jrebel.fakes.Fake1;
+import org.jboss.arquillian.extension.jrebel.fakes.delta.Fake3;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -56,10 +56,11 @@ public final class Packager {
         return ShrinkWrap.create(WebArchive.class, "test.war")
             .addClass(Serializer.class)
             .addClass(DirectoryWalker.class)
-            .addPackage(SizeFileComparator.class.getPackage())
-            .addPackages(true, Fake1.class.getPackage())
+            .addPackage(Fake1.class.getPackage())
+            .addPackages(true, Fake3.class.getPackage())
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
             .addAsWebResource(SAMPLE_WEB_RESOURCE, ArchivePaths.create("sampleWebResource.html"))
+            .addAsWebResource(SAMPLE_WEB_RESOURCE, ArchivePaths.create("otherDir/sampleWebResource.html"))
             .addAsWebResource(SAMPLE_WEB_RESOURCE2, ArchivePaths.create("sampleWebResource2.html"));
     }
 

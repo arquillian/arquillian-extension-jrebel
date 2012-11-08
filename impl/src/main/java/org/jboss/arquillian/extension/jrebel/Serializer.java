@@ -35,7 +35,7 @@ import java.io.OutputStream;
 final class Serializer {
 // -------------------------- STATIC METHODS --------------------------
 
-    public static byte[] toByteArray(Object object)
+    private static byte[] toByteArray(Object object)
     {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -57,7 +57,7 @@ final class Serializer {
         }
     }
 
-    public static <T> T toObject(Class<T> type, InputStream input)
+    private static <T> T toObject(Class<T> type, InputStream input)
     {
         try {
             ObjectInputStream outObj = new ObjectInputStream(input);
@@ -78,13 +78,18 @@ final class Serializer {
     public static void toStream(Object object, File out)
     {
         try {
+            if (!out.exists()) {
+                if (!out.createNewFile()) {
+                    throw new RuntimeException("Cannot create file " + out.getAbsolutePath());
+                }
+            }
             toStream(object, new FileOutputStream(out));
         } catch (Exception e) {
             throw new RuntimeException("Could not serialize object to Stream", e);
         }
     }
 
-    public static void toStream(Object object, OutputStream out)
+    private static void toStream(Object object, OutputStream out)
     {
         byte[] serialized = toByteArray(object);
         try {

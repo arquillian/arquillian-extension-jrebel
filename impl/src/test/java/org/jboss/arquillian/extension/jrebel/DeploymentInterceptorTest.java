@@ -90,10 +90,11 @@ public class DeploymentInterceptorTest {
             .importDirectory(deploymentRootDir)
             .as(EnterpriseArchive.class);
 
-        Assert.assertEquals(21, explodedArchive.getContent().size());
+        Assert.assertEquals(25, explodedArchive.getContent().size());
         Assert.assertNotNull(explodedArchive.get("/test.war/WEB-INF/beans.xml"));
         Assert.assertNotNull(explodedArchive.get("/test.war/WEB-INF/classes/rebel.xml"));
         Assert.assertNotNull(explodedArchive.get("/test.war/WEB-INF/classes/org"));
+        Assert.assertNotNull(explodedArchive.get("/test.war/otherDir/sampleWebResource.html"));
         Assert.assertNull(explodedArchive.get("/test.war/WEB-INF/classes/org/arquillian"));
     }
 
@@ -123,10 +124,11 @@ public class DeploymentInterceptorTest {
             .importDirectory(deploymentRootDir)
             .as(WebArchive.class);
 
-        Assert.assertEquals(20, explodedArchive.getContent().size());
+        Assert.assertEquals(24, explodedArchive.getContent().size());
         Assert.assertNotNull(explodedArchive.get("/WEB-INF/beans.xml"));
         Assert.assertNotNull(explodedArchive.get("/WEB-INF/classes/rebel.xml"));
         Assert.assertNotNull(explodedArchive.get("/WEB-INF/classes/org"));
+        Assert.assertNotNull(explodedArchive.get("/otherDir/sampleWebResource.html"));
         Assert.assertNull(explodedArchive.get("/WEB-INF/classes/org/arquillian"));
     }
 

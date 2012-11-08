@@ -36,11 +36,13 @@ import java.util.Map;
 public class RebelArchiveFilter implements ArchiveFilter {
 // ------------------------------ FIELDS ------------------------------
 
-    private Archive<?> archive;
+    private final Archive<?> archive;
 
-    private Map<ArchivePath, Asset> fileOrClassAssets;
+    private Map<ArchivePath, Node> fileOrClassNode;
 
     private Map<ArchivePath, Asset> nonFileNonClassAssets;
+
+    private final RebelXmlHelper.Rootizer rootizer = new RebelXmlHelper.Rootizer();
 
 // --------------------------- CONSTRUCTORS ---------------------------
 
@@ -59,17 +61,18 @@ public class RebelArchiveFilter implements ArchiveFilter {
     public boolean accept(Node node)
     {
         if (node.getAsset() == null) {
-            return !isEmpty(node);
+            return isNotEmpty(node);
         } else {
-            return !fileOrClassAssets.containsKey(node.getPath());
+            final boolean isFileOrClassNode = fileOrClassNode.containsKey(node.getPath());
+            return !isFileOrClassNode || rootizer.rootize(node) == null;
         }
     }
 
 // -------------------------- OTHER METHODS --------------------------
 
-    public Collection<Asset> getFileOrClassAssets()
+    public Collection<Node> getFileOrClassNodes()
     {
-        return fileOrClassAssets.values();
+        return fileOrClassNode.values();
     }
 
     public Collection<Asset> getNonFileNonClassAssets()
@@ -84,7 +87,7 @@ public class RebelArchiveFilter implements ArchiveFilter {
 
     private void filter()
     {
-        fileOrClassAssets = new HashMap<ArchivePath, Asset>();
+        fileOrClassNode = new HashMap<ArchivePath, Node>();
         nonFileNonClassAssets = new HashMap<ArchivePath, Asset>();
         Node node;
         Asset asset;
@@ -93,24 +96,24 @@ public class RebelArchiveFilter implements ArchiveFilter {
             asset = node.getAsset();
             if (asset instanceof FileAsset || asset instanceof ClassAsset || (asset instanceof ClassLoaderAsset && isProperlyNestedClass(
                 (ClassLoaderAsset) asset))) {
-                fileOrClassAssets.put(entry.getKey(), asset);
+                fileOrClassNode.put(entry.getKey(), node);
             } else if (!ArchiveHelper.isNestedArchiveOfEAR(archive, node) && asset != null) {
                 nonFileNonClassAssets.put(entry.getKey(), asset);
             }
         }
     }
 
-    private boolean isEmpty(Node node)
+    private boolean isNotEmpty(Node node)
     {
         if (node.getAsset() == null) {
             for (Node child : node.getChildren()) {
-                if (!isEmpty(child)) {
-                    return false;
+                if (isNotEmpty(child)) {
+                    return true;
                 }
             }
-            return true;
+            return false;
         } else {
-            return fileOrClassAssets.containsKey(node.getPath());
+            return !fileOrClassNode.containsKey(node.getPath());
         }
     }
 
