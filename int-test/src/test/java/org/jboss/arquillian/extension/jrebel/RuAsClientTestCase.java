@@ -18,46 +18,55 @@
 package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.container.test.api.OperateOnDeployment;
+import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.inject.Inject;
+import java.net.URL;
 
-/**
- * JRebelIntegrationTestCase
- *
- * @author <a href="mailto:aslak@redhat.com">Aslak Knutsen</a>
- * @version $Revision: $
- */
+import static org.junit.Assert.assertTrue;
+
 @RunWith(Arquillian.class)
-public class JRebelIntegrationTestCase {
-// ------------------------------ FIELDS ------------------------------
+public class RuAsClientTestCase {
 
-    @Inject
-    InjectableArtifact injectableArtifact;
-
-// -------------------------- STATIC METHODS --------------------------
-
-    @Deployment
-    public static WebArchive createWar()
+    @Deployment(name = "ear")
+    public static EnterpriseArchive createEAR()
     {
-        return Packager.warWithInjectableArtifact(JRebelIntegrationTestCase.class);
+        return Packager.ear();
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    @Deployment(name = "war")
+    public static WebArchive createWar()
+    {
+        return Packager.warWithInjectableArtifact(RuAsClientTestCase.class);
+    }
 
+    @OperateOnDeployment("war")
+    @RunAsClient
     @Test
-    public void shouldBeAbleToiChange() throws Exception
+    public void shouldBeAbleToChange(@ArquillianResource URL deploymentURL) throws Exception
     {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
          */
-        System.out.println(injectableArtifact);
-//        System.out.println(injectableArtifact.bar());
-        Assert.assertNotNull(injectableArtifact);
+        assertTrue(deploymentURL.toString().endsWith("/RuAsClientTestCase/"));
+    }
+
+    @OperateOnDeployment("ear")
+    @RunAsClient
+    @Test
+    public void shouldBeAbleToChangeEAR(@ArquillianResource URL deploymentURL) throws Exception
+    {
+        /**
+         * Run tests once, then modify this method and run tests again.
+         * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
+         */
+        assertTrue(deploymentURL.toString().endsWith("/withInjectableArtifactEAR/"));
     }
 }

@@ -31,9 +31,9 @@ import javax.inject.Inject;
 public class MultipleDeploymentsTestCase {
 // ------------------------------ FIELDS ------------------------------
 
-    private static final String OTHER_WAR_WITH_INJECTABLE_ARTIFACT = "OtherWarWithInjectableArtifact";
+    private static final String OTHER_WAR_WITH_INJECTABLE_ARTIFACT = "OtherWarWithInjectableArtifact.war";
 
-    private static final String WAR_WITH_INJECTABLE_ARTIFACT = "WarWithInjectableArtifact";
+    private static final String WAR_WITH_INJECTABLE_ARTIFACT = "WarWithInjectableArtifact.war";
 
     @Inject
     InjectableArtifact injectableArtifact;
@@ -43,7 +43,7 @@ public class MultipleDeploymentsTestCase {
     @Deployment(name = WAR_WITH_INJECTABLE_ARTIFACT)
     public static WebArchive createFirstArchive()
     {
-        return Packager.warWithInjectableArtifact();
+        return Packager.warWithInjectableArtifact(WAR_WITH_INJECTABLE_ARTIFACT);
     }
 
     @Deployment(name = OTHER_WAR_WITH_INJECTABLE_ARTIFACT)

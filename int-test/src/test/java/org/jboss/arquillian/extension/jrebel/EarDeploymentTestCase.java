@@ -19,10 +19,7 @@ package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +28,6 @@ import javax.inject.Inject;
 
 @RunWith(Arquillian.class)
 public class EarDeploymentTestCase {
-// ------------------------------ FIELDS ------------------------------
 
     @Inject
     EJBBean EJBBean;
@@ -39,22 +35,11 @@ public class EarDeploymentTestCase {
     @Inject
     InjectableArtifact injectableArtifact;
 
-// -------------------------- STATIC METHODS --------------------------
-
     @Deployment
     public static EnterpriseArchive createEar()
     {
-        final JavaArchive ejbJar = Packager.ejbJar();
-        /**
-         * If we'd stuff test class into ejbJar then we wouldn't be able to inject stuff from webArchive
-         */
-//        ejbJar.addClass(EARDeploymentTestCase.class);
-        final WebArchive webArchive = Packager.warWithInjectableArtifact();
-        webArchive.addClass(EarDeploymentTestCase.class);
-        return ShrinkWrap.create(EnterpriseArchive.class, "jrebel-test.ear").addAsModule(ejbJar).addAsModule(webArchive);
+        return Packager.ear();
     }
-
-// -------------------------- OTHER METHODS --------------------------
 
     @Test
     public void shouldBeAbleToiChange() throws Exception
@@ -71,7 +56,7 @@ public class EarDeploymentTestCase {
          * Run EARDeploymentTestCase once then uncomment following lines as well as corresponding methods in EJBBean and InjectableArtifact
          * and you will see that it gets hot deployed.
          */
-//        System.out.println(injectableArtifact.bar());
 //        System.out.println(EJBBean.foo());
+//        System.out.println(injectableArtifact.bar());
     }
 }

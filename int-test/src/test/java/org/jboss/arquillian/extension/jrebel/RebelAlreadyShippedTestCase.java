@@ -87,7 +87,7 @@ public class RebelAlreadyShippedTestCase {
     @Deployment
     public static WebArchive createArchive()
     {
-        return Packager.warWithInjectableArtifact().add(new StringAsset(REBEL_XML), REBEL_XML_PATH);
+        return Packager.warWithInjectableArtifact(RebelAlreadyShippedTestCase.class).add(new StringAsset(REBEL_XML), REBEL_XML_PATH);
     }
 
 // -------------------------- OTHER METHODS --------------------------
