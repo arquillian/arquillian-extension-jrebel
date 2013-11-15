@@ -52,7 +52,6 @@ import java.util.logging.Logger;
  * @version $Revision: $
  */
 public class DeploymentInterceptor {
-// ------------------------------ FIELDS ------------------------------
 
     private static final Logger LOGGER = Logger.getLogger(DeploymentInterceptor.class.getName());
 
@@ -75,15 +74,12 @@ public class DeploymentInterceptor {
 
     private File tempDirectory = new File("target" + File.separator + "jrebel-temp");
 
-// --------------------- GETTER / SETTER METHODS ---------------------
-
     public File getTempDirectory()
     {
         return tempDirectory;
     }
 
-// -------------------------- OTHER METHODS --------------------------
-
+    @SuppressWarnings("UnusedDeclaration")
     public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext, TestClass testClass)
     {
         tempDirectory = ShrinkWrapUtil.createTempDirectory(getTempDirectory());
@@ -93,10 +89,13 @@ public class DeploymentInterceptor {
         Archive<?> archive = deployment.getDescription().getArchive();
         final File explodedDeploymentDirectory = new File(
             tempDirectory + File.separator + testClass.getJavaClass().getCanonicalName() + File.separator + event.getContainer().getName());
-        final File mainArchiveDirectory = new File(explodedDeploymentDirectory, testableArchive.getName());
+
+        final Archive<?> explodableArchive = getExplodableArchive(testableArchive, archive);
+
+        final File mainArchiveDirectory = new File(explodedDeploymentDirectory, explodableArchive.getName());
         final String mainArchivePath = mainArchiveDirectory.getAbsolutePath();
-        File metaDataFile = new File(explodedDeploymentDirectory, testableArchive.getName() + ".meta");
-        boolean alreadyDeployed = mainArchiveDirectory.exists() && metaDataFile.exists();
+        File metaDataFile = new File(explodedDeploymentDirectory, explodableArchive.getName() + ".meta");
+        boolean alreadyDeployed = metaDataFile.exists();
 
         if (!alreadyDeployed) {
             processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive, explodedDeploymentDirectory, mainArchivePath,
@@ -104,7 +103,7 @@ public class DeploymentInterceptor {
         } else {
             SerializableHttpContextData serializableHttpContextData = Serializer.toObject(SerializableHttpContextData.class, metaDataFile);
             explodeIfNeeded(testableArchive, archive, explodedDeploymentDirectory, serializableHttpContextData.isRebelXmlGenerated());
-            testableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
+            explodableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
             ProtocolMetaData metaData = new ProtocolMetaData();
             metaData.addContext(serializableHttpContextData.toHTTPContext());
             protocolMetaData.set(metaData);
@@ -185,8 +184,13 @@ public class DeploymentInterceptor {
         if (rebelXmlGenerated && (ArchiveHelper.isEarArchive(archive) || !rebelArchiveFilter.isRebelXmlTheOnlyNonFileNonClassAsset())) {
             //noinspection ResultOfMethodCallIgnored
             explodedDeploymentDirectory.mkdirs();
-            testableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, rebelArchiveFilter);
+            getExplodableArchive(testableArchive, archive).as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, rebelArchiveFilter);
         }
+    }
+
+    private Archive<?> getExplodableArchive(Archive<?> testableArchive, Archive<?> archive)
+    {
+        return null == testableArchive ? archive : testableArchive;
     }
 
     /**
@@ -209,19 +213,23 @@ public class DeploymentInterceptor {
         try {
             event.fire(new UnDeployDeployment(eventContext.getEvent().getContainer(), deployment));
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Cannot undeploy " + deployment.getDescription().getName(), e);
+            final String msg =
+                "Cannot undeploy " + deployment.getDescription().getName() + ". Usually it's not a problem. To see more details enable FINE logging.";
+            LOGGER.log(Level.INFO, msg);
+            LOGGER.log(Level.FINE, "Cannot undeploy " + deployment.getDescription().getName() + ". No such deployment or stale state in target/jrebel-temp", e);
         } finally {
             forcedUndeployment = false;
         }
         boolean rebelXmlGenerated = false;
 
-        if (!testableArchive.equals(archive)) {
+        if (null != testableArchive && !testableArchive.equals(archive)) {
             rebelXmlGenerated = addRebelXmlIfNeededToEmbeddedEjbJar(testableArchive, archive, mainArchivePath);
         }
-        if (ArchiveHelper.isWebArchive(testableArchive)) {
-            rebelXmlGenerated |= addRebelXmlIfNeeded(testableArchive, explodedDeploymentDirectory.getAbsolutePath());
-        } else if (ArchiveHelper.isEarArchive(testableArchive)) {
-            rebelXmlGenerated = addRebelXmlIfNeededToEarModules((EnterpriseArchive) testableArchive, mainArchivePath);
+        final Archive<?> explodableArchive = getExplodableArchive(testableArchive, archive);
+        if (ArchiveHelper.isWebArchive(explodableArchive)) {
+            rebelXmlGenerated |= addRebelXmlIfNeeded(explodableArchive, explodedDeploymentDirectory.getAbsolutePath());
+        } else if (ArchiveHelper.isEarArchive(explodableArchive)) {
+            rebelXmlGenerated = addRebelXmlIfNeededToEarModules((EnterpriseArchive) explodableArchive, mainArchivePath);
         }
         explodeIfNeeded(testableArchive, archive, explodedDeploymentDirectory, rebelXmlGenerated);
 
@@ -229,6 +237,8 @@ public class DeploymentInterceptor {
 
         HTTPContext httpContext = protocolMetaData.get().getContext(HTTPContext.class);
         if (httpContext != null) {
+            //noinspection ResultOfMethodCallIgnored
+            metaDataFile.getParentFile().mkdirs();
             Serializer.toStream(new SerializableHttpContextData(httpContext, rebelXmlGenerated), metaDataFile);
         }
     }

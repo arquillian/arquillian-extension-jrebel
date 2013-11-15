@@ -19,13 +19,38 @@ package org.jboss.arquillian.extension.jrebel;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 import java.io.File;
 
 public final class Packager {
-// -------------------------- STATIC METHODS --------------------------
+
+    private Packager()
+    {
+    }
+
+    public static EnterpriseArchive ear()
+    {
+        final JavaArchive ejbJar = Packager.ejbJar();
+        /**
+         * If we'd stuff test class into ejbJar then we wouldn't be able to inject stuff from webArchive
+         */
+        //        ejbJar.addClass(EARDeploymentTestCase.class);
+        final WebArchive webArchive = Packager.warWithInjectableArtifact("withInjectableArtifactEAR.war");
+
+        webArchive.addClass(EarDeploymentTestCase.class);
+        /**
+         * After first test run look at http://localhost:8080/withInjectableArtifact/dynamic.html.
+         * It should return 404.
+         * Then uncomment first line and run tests, now under the URL should be empty page.
+         * Finaly uncomment second line, run tests and refresh the page. It should say "Hello".
+         */
+        //        webArchive.addAsWebResource(EmptyAsset.INSTANCE, ArchivePaths.create("dynamic.html"));
+        //        webArchive.addAsWebResource(new StringAsset("Hello"), ArchivePaths.create("dynamic.html"));
+        return ShrinkWrap.create(EnterpriseArchive.class, "jrebel-test.ear").addAsModule(ejbJar).addAsModule(webArchive);
+    }
 
     public static JavaArchive ejbJar()
     {
@@ -39,17 +64,16 @@ public final class Packager {
             .addClass(InjectableArtifact.class);
     }
 
-    public static WebArchive warWithInjectableArtifact()
+    public static WebArchive warWithInjectableArtifact(String archiveName)
     {
-        return ShrinkWrap.create(WebArchive.class, "withInjectableArtifact.war")
+        return ShrinkWrap.create(WebArchive.class, archiveName)
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
             .addAsWebResource(new File("src/main/webapp/sampleWebResource.html"), "sampleWebResource.html")
             .addClass(InjectableArtifact.class);
     }
 
-// --------------------------- CONSTRUCTORS ---------------------------
-
-    private Packager()
+    public static WebArchive warWithInjectableArtifact(Class<?> testCaseClass)
     {
+        return warWithInjectableArtifact(testCaseClass.getSimpleName() + ".war");
     }
 }
