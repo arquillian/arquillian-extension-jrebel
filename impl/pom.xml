@@ -14,7 +14,6 @@
 
     <!-- Artifact Configuration -->
     <artifactId>arquillian-jrebel-impl</artifactId>
-    <version>1.0.0.Alpha1-SNAPSHOT</version>
     <name>Arquillian Extension JRebel Implementation</name>
     <url>http://www.jboss.org</url>
     <description>Arquillian Extension JRebel</description>
