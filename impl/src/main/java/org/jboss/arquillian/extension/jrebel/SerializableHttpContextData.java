@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SerializableHttpContextData implements Serializable {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private String host;
 
@@ -36,10 +36,9 @@ public class SerializableHttpContextData implements Serializable {
 
     private Set<Servlet> servlets;
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    public SerializableHttpContextData(HTTPContext context, boolean rebelXmlGenerated)
-    {
+    public SerializableHttpContextData(HTTPContext context, boolean rebelXmlGenerated) {
         name = context.getName();
         host = context.getHost();
         port = context.getPort();
@@ -49,45 +48,42 @@ public class SerializableHttpContextData implements Serializable {
         this.rebelXmlGenerated = rebelXmlGenerated;
     }
 
-// --------------------- GETTER / SETTER METHODS ---------------------
+    // --------------------- GETTER / SETTER METHODS ---------------------
 
-    private Set<Servlet> getServlets()
-    {
+    private Set<Servlet> getServlets() {
         if (servlets == null) {
             servlets = new HashSet<Servlet>();
         }
         return servlets;
     }
 
-    public boolean isRebelXmlGenerated()
-    {
+    public boolean isRebelXmlGenerated() {
         return rebelXmlGenerated;
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
-    public HTTPContext toHTTPContext()
-    {
+    public HTTPContext toHTTPContext() {
         final HTTPContext httpContext = new HTTPContext(name, host, port);
         for (Servlet servlet : getServlets()) {
-            httpContext.add(new org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet(servlet.name, servlet.contextRoot));
+            httpContext.add(new org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet(servlet.name,
+                servlet.contextRoot));
         }
         return httpContext;
     }
 
-// -------------------------- INNER CLASSES --------------------------
+    // -------------------------- INNER CLASSES --------------------------
 
     private class Servlet implements Serializable {
-// ------------------------------ FIELDS ------------------------------
+        // ------------------------------ FIELDS ------------------------------
 
         private String contextRoot;
 
         private String name;
 
-// --------------------------- CONSTRUCTORS ---------------------------
+        // --------------------------- CONSTRUCTORS ---------------------------
 
-        public Servlet(String name, String contextRoot)
-        {
+        public Servlet(String name, String contextRoot) {
             this.name = name;
             this.contextRoot = contextRoot;
         }

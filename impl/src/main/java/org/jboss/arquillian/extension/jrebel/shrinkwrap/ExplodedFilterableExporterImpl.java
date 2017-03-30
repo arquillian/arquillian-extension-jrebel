@@ -26,31 +26,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ExplodedFilterableExporterImpl extends AssignableBase<Archive<?>> implements ExplodedFilterableExporter {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private static final Logger log = Logger.getLogger(ExplodedFilterableExporterImpl.class.getName());
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    public ExplodedFilterableExporterImpl(final Archive<?> archive)
-    {
+    public ExplodedFilterableExporterImpl(final Archive<?> archive) {
         super(archive);
     }
 
-// ------------------------ INTERFACE METHODS ------------------------
+    // ------------------------ INTERFACE METHODS ------------------------
 
-
-// --------------------- Interface ExplodedFilterableExporter ---------------------
+    // --------------------- Interface ExplodedFilterableExporter ---------------------
 
     @Override
-    public File exportExploded(final File baseDirectory, ArchiveFilter filter)
-    {
+    public File exportExploded(final File baseDirectory, ArchiveFilter filter) {
         return exportExploded(baseDirectory, this.getArchive().getName(), filter);
     }
 
     @Override
-    public File exportExploded(File baseDirectory, String directoryName, ArchiveFilter filter)
-    {
+    public File exportExploded(File baseDirectory, String directoryName, ArchiveFilter filter) {
         final Archive<?> archive = this.getArchive();
         Validate.notNull(archive, "No archive provided");
         Validate.notNull(baseDirectory, "No baseDirectory provided");
@@ -65,7 +61,8 @@ public class ExplodedFilterableExporterImpl extends AssignableBase<Archive<?>> i
         }
 
         // Get the export delegate
-        final ExplodedFilterableExporterDelegate exporterDelegate = new ExplodedFilterableExporterDelegate(archive, baseDirectory, directoryName, filter);
+        final ExplodedFilterableExporterDelegate exporterDelegate =
+            new ExplodedFilterableExporterDelegate(archive, baseDirectory, directoryName, filter);
 
         // Run the export and get the result
         final File explodedDirectory = exporterDelegate.export();

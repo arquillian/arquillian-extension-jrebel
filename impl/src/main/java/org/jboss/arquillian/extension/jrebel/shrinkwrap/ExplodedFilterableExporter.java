@@ -22,7 +22,7 @@ import org.jboss.shrinkwrap.api.Assignable;
 import java.io.File;
 
 public interface ExplodedFilterableExporter extends Assignable {
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     File exportExploded(final File baseDirectory, ArchiveFilter filter);
 

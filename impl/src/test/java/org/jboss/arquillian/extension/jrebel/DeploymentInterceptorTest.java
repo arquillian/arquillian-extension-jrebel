@@ -41,47 +41,50 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 
 public class DeploymentInterceptorTest {
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     @Test
-    public void skipEmptyExplode() throws IOException
-    {
+    public void skipEmptyExplode() throws IOException {
         final Archive<?> archive = Packager.createFullyReloadableWebArchive();
         final DeploymentInterceptor deploymentInterceptor = createDeploymentInterceptorMock();
         final File tempDirectory = deploymentInterceptor.getTempDirectory();
         FileUtils.deleteDirectory(tempDirectory);
         ShrinkWrapUtil.createTempDirectory(tempDirectory);
         final String jrebelExtRoot = tempDirectory.getPath();
-        final String deploymentRoot = jrebelExtRoot + "/" + DeploymentInterceptorTest.class.getCanonicalName() + "/mock/fullyReloadableWebArchive.war";
+        final String deploymentRoot = jrebelExtRoot
+            + "/"
+            + DeploymentInterceptorTest.class.getCanonicalName()
+            + "/mock/fullyReloadableWebArchive.war";
 
         final File jrebelExtRootDir = new File(jrebelExtRoot);
         Assert.assertTrue(jrebelExtRootDir.exists());
         final File deploymentRootDir = new File(deploymentRoot);
         Assert.assertFalse(deploymentRootDir.exists());
 
-        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive), new TestClass(DeploymentInterceptorTest.class));
+        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive),
+            new TestClass(DeploymentInterceptorTest.class));
 
         Assert.assertFalse(deploymentRootDir.exists());
     }
 
     @Test
-    public void testExplodedEnterpriseArchive() throws IOException
-    {
+    public void testExplodedEnterpriseArchive() throws IOException {
         final Archive<?> archive = Packager.createEnterpriseArchive();
         final DeploymentInterceptor deploymentInterceptor = createDeploymentInterceptorMock();
         final File tempDirectory = deploymentInterceptor.getTempDirectory();
         FileUtils.deleteDirectory(tempDirectory);
         ShrinkWrapUtil.createTempDirectory(tempDirectory);
         final String jrebelExtRoot = tempDirectory.getPath();
-        final String deploymentRoot = jrebelExtRoot + "/" + DeploymentInterceptorTest.class.getCanonicalName() + "/mock/test.ear";
+        final String deploymentRoot =
+            jrebelExtRoot + "/" + DeploymentInterceptorTest.class.getCanonicalName() + "/mock/test.ear";
 
         final File jrebelExtRootDir = new File(jrebelExtRoot);
         Assert.assertTrue(jrebelExtRootDir.exists());
         final File deploymentRootDir = new File(deploymentRoot);
         Assert.assertFalse(deploymentRootDir.exists());
 
-
-        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive), new TestClass(DeploymentInterceptorTest.class));
+        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive),
+            new TestClass(DeploymentInterceptorTest.class));
 
         Assert.assertTrue(deploymentRootDir.exists());
 
@@ -99,23 +102,23 @@ public class DeploymentInterceptorTest {
     }
 
     @Test
-    public void testExplodedWebArchive() throws IOException
-    {
+    public void testExplodedWebArchive() throws IOException {
         final Archive<?> archive = Packager.createWebArchive();
         final DeploymentInterceptor deploymentInterceptor = createDeploymentInterceptorMock();
         final File tempDirectory = deploymentInterceptor.getTempDirectory();
         FileUtils.deleteDirectory(tempDirectory);
         ShrinkWrapUtil.createTempDirectory(tempDirectory);
         final String jrebelExtRoot = tempDirectory.getPath();
-        final String deploymentRoot = jrebelExtRoot + "/" + DeploymentInterceptorTest.class.getCanonicalName() + "/mock/test.war";
+        final String deploymentRoot =
+            jrebelExtRoot + "/" + DeploymentInterceptorTest.class.getCanonicalName() + "/mock/test.war";
 
         final File jrebelExtRootDir = new File(jrebelExtRoot);
         Assert.assertTrue(jrebelExtRootDir.exists());
         final File deploymentRootDir = new File(deploymentRoot);
         Assert.assertFalse(deploymentRootDir.exists());
 
-
-        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive), new TestClass(DeploymentInterceptorTest.class));
+        deploymentInterceptor.onDeploy(createDeployEventContextMock(archive),
+            new TestClass(DeploymentInterceptorTest.class));
 
         Assert.assertTrue(deploymentRootDir.exists());
 
@@ -132,20 +135,19 @@ public class DeploymentInterceptorTest {
         Assert.assertNull(explodedArchive.get("/WEB-INF/classes/org/arquillian"));
     }
 
-    private EventContext<DeployDeployment> createDeployEventContextMock(Archive<?> archive)
-    {
+    private EventContext<DeployDeployment> createDeployEventContextMock(Archive<?> archive) {
         final Container containerMock = Mockito.mock(Container.class);
         Mockito.when(containerMock.getName()).thenReturn("mock");
         final DeploymentDescription deploymentDescription = new DeploymentDescription("test.war", archive);
         deploymentDescription.setTestableArchive(archive);
         final DeployDeployment event = new DeployDeployment(containerMock, new Deployment(deploymentDescription));
-        @SuppressWarnings("unchecked") final EventContext<DeployDeployment> eventContextMock = Mockito.mock(EventContext.class);
+        @SuppressWarnings("unchecked") final EventContext<DeployDeployment> eventContextMock =
+            Mockito.mock(EventContext.class);
         Mockito.when(eventContextMock.getEvent()).thenReturn(event);
         return eventContextMock;
     }
 
-    private DeploymentInterceptor createDeploymentInterceptorMock()
-    {
+    private DeploymentInterceptor createDeploymentInterceptorMock() {
         try {
             final DeploymentInterceptor deploymentInterceptor = new DeploymentInterceptor();
             final Field eventField = DeploymentInterceptor.class.getDeclaredField("event");

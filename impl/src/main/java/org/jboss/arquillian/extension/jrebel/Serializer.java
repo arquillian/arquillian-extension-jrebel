@@ -33,10 +33,9 @@ import java.io.OutputStream;
  * @version $Revision: $
  */
 final class Serializer {
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    private static byte[] toByteArray(Object object)
-    {
+    private static byte[] toByteArray(Object object) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ObjectOutputStream outObj = new ObjectOutputStream(out);
@@ -48,8 +47,7 @@ final class Serializer {
         }
     }
 
-    public static <T> T toObject(Class<T> type, File input)
-    {
+    public static <T> T toObject(Class<T> type, File input) {
         try {
             return toObject(type, new FileInputStream(input));
         } catch (Exception e) {
@@ -57,8 +55,7 @@ final class Serializer {
         }
     }
 
-    private static <T> T toObject(Class<T> type, InputStream input)
-    {
+    private static <T> T toObject(Class<T> type, InputStream input) {
         try {
             ObjectInputStream outObj = new ObjectInputStream(input);
             Object object = outObj.readObject();
@@ -75,8 +72,7 @@ final class Serializer {
         }
     }
 
-    public static void toStream(Object object, File out)
-    {
+    public static void toStream(Object object, File out) {
         try {
             if (!out.exists()) {
                 if (!out.createNewFile()) {
@@ -89,8 +85,7 @@ final class Serializer {
         }
     }
 
-    private static void toStream(Object object, OutputStream out)
-    {
+    private static void toStream(Object object, OutputStream out) {
         byte[] serialized = toByteArray(object);
         try {
             out.write(serialized);

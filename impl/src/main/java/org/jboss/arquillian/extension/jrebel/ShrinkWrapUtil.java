@@ -26,10 +26,9 @@ import java.io.File;
  * @version $Revision: $
  */
 final class ShrinkWrapUtil {
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    public static File createTempDirectory(File root)
-    {
+    public static File createTempDirectory(File root) {
         try {
             if (!root.exists() && !root.mkdirs()) {
                 throw new RuntimeException("Cannot create directory " + root.getAbsolutePath());
@@ -40,9 +39,8 @@ final class ShrinkWrapUtil {
         }
     }
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    private ShrinkWrapUtil()
-    {
+    private ShrinkWrapUtil() {
     }
 }

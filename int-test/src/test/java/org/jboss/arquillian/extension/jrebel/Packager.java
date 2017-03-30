@@ -27,12 +27,10 @@ import java.io.File;
 
 public final class Packager {
 
-    private Packager()
-    {
+    private Packager() {
     }
 
-    public static EnterpriseArchive ear()
-    {
+    public static EnterpriseArchive ear() {
         final JavaArchive ejbJar = Packager.ejbJar();
         /**
          * If we'd stuff test class into ejbJar then we wouldn't be able to inject stuff from webArchive
@@ -52,28 +50,26 @@ public final class Packager {
         return ShrinkWrap.create(EnterpriseArchive.class, "jrebel-test.ear").addAsModule(ejbJar).addAsModule(webArchive);
     }
 
-    public static JavaArchive ejbJar()
-    {
-        return ShrinkWrap.create(JavaArchive.class, "ejb.jar").addAsResource(EmptyAsset.INSTANCE, "beans.xml").addClass(EJBBean.class);
+    public static JavaArchive ejbJar() {
+        return ShrinkWrap.create(JavaArchive.class, "ejb.jar")
+            .addAsResource(EmptyAsset.INSTANCE, "beans.xml")
+            .addClass(EJBBean.class);
     }
 
-    public static WebArchive otherWarWithInjectableArtifact()
-    {
+    public static WebArchive otherWarWithInjectableArtifact() {
         return ShrinkWrap.create(WebArchive.class, "otherWithInjectableArtifact.war")
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
             .addClass(InjectableArtifact.class);
     }
 
-    public static WebArchive warWithInjectableArtifact(String archiveName)
-    {
+    public static WebArchive warWithInjectableArtifact(String archiveName) {
         return ShrinkWrap.create(WebArchive.class, archiveName)
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
             .addAsWebResource(new File("src/main/webapp/sampleWebResource.html"), "sampleWebResource.html")
             .addClass(InjectableArtifact.class);
     }
 
-    public static WebArchive warWithInjectableArtifact(Class<?> testCaseClass)
-    {
+    public static WebArchive warWithInjectableArtifact(Class<?> testCaseClass) {
         return warWithInjectableArtifact(testCaseClass.getSimpleName() + ".war");
     }
 }

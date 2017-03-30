@@ -74,21 +74,23 @@ public class DeploymentInterceptor {
 
     private File tempDirectory = new File("target" + File.separator + "jrebel-temp");
 
-    public File getTempDirectory()
-    {
+    public File getTempDirectory() {
         return tempDirectory;
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext, TestClass testClass)
-    {
+    public void onDeploy(@Observes(precedence = -1) EventContext<DeployDeployment> eventContext, TestClass testClass) {
         tempDirectory = ShrinkWrapUtil.createTempDirectory(getTempDirectory());
         final DeployDeployment event = eventContext.getEvent();
         final Deployment deployment = event.getDeployment();
         Archive<?> testableArchive = deployment.getDescription().getTestableArchive();
         Archive<?> archive = deployment.getDescription().getArchive();
         final File explodedDeploymentDirectory = new File(
-            tempDirectory + File.separator + testClass.getJavaClass().getCanonicalName() + File.separator + event.getContainer().getName());
+            tempDirectory
+                + File.separator
+                + testClass.getJavaClass().getCanonicalName()
+                + File.separator
+                + event.getContainer().getName());
 
         final Archive<?> explodableArchive = getExplodableArchive(testableArchive, archive);
 
@@ -98,12 +100,16 @@ public class DeploymentInterceptor {
         boolean alreadyDeployed = metaDataFile.exists();
 
         if (!alreadyDeployed) {
-            processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive, explodedDeploymentDirectory, mainArchivePath,
+            processArchiveAndProceedWithDeployment(eventContext, deployment, testableArchive, archive,
+                explodedDeploymentDirectory, mainArchivePath,
                 metaDataFile);
         } else {
-            SerializableHttpContextData serializableHttpContextData = Serializer.toObject(SerializableHttpContextData.class, metaDataFile);
-            explodeIfNeeded(testableArchive, archive, explodedDeploymentDirectory, serializableHttpContextData.isRebelXmlGenerated());
-            explodableArchive.as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
+            SerializableHttpContextData serializableHttpContextData =
+                Serializer.toObject(SerializableHttpContextData.class, metaDataFile);
+            explodeIfNeeded(testableArchive, archive, explodedDeploymentDirectory,
+                serializableHttpContextData.isRebelXmlGenerated());
+            explodableArchive.as(ExplodedFilterableExporter.class)
+                .exportExploded(explodedDeploymentDirectory, new RebelArchiveFilter(archive));
             ProtocolMetaData metaData = new ProtocolMetaData();
             metaData.addContext(serializableHttpContextData.toHTTPContext());
             protocolMetaData.set(metaData);
@@ -114,8 +120,7 @@ public class DeploymentInterceptor {
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void onUnDeploy(@Observes EventContext<UnDeployDeployment> eventContext)
-    {
+    public void onUnDeploy(@Observes EventContext<UnDeployDeployment> eventContext) {
         if (forcedUndeployment) {
             eventContext.proceed();
         }
@@ -125,13 +130,14 @@ public class DeploymentInterceptor {
      * If no rebel.xml file found in archive in appropriate locations then
      * rebel.xml is generated.
      *
-     * @param archive  archive to inspect and add rebel.xml to
-     * @param rootPath path to use when calculating exploded directory path
+     * @param archive
+     *     archive to inspect and add rebel.xml to
+     * @param rootPath
+     *     path to use when calculating exploded directory path
      *
      * @return true if rebel.xml was generated; false otherwise
      */
-    private boolean addRebelXmlIfNeeded(Archive<?> archive, String rootPath)
-    {
+    private boolean addRebelXmlIfNeeded(Archive<?> archive, String rootPath) {
         final String path = rootPath + "/" + archive.getName();
         final String archivePath = ArchiveHelper.isWebArchive(archive) ? "WEB-INF/classes/rebel.xml" : "rebel.xml";
         if (archive.get(archivePath) == null) {
@@ -141,8 +147,7 @@ public class DeploymentInterceptor {
         return false;
     }
 
-    private boolean addRebelXmlIfNeededToEarModules(EnterpriseArchive enterpriseArchive, String mainArchivePath)
-    {
+    private boolean addRebelXmlIfNeededToEarModules(EnterpriseArchive enterpriseArchive, String mainArchivePath) {
         boolean rebelXmlGenerated = false;
         final Set<Node> rootChildren = enterpriseArchive.get("/").getChildren();
         for (Node node : rootChildren) {
@@ -157,8 +162,8 @@ public class DeploymentInterceptor {
         return rebelXmlGenerated;
     }
 
-    private boolean addRebelXmlIfNeededToEmbeddedEjbJar(Archive<?> testableArchive, Archive<?> archive, String mainArchivePath)
-    {
+    private boolean addRebelXmlIfNeededToEmbeddedEjbJar(Archive<?> testableArchive, Archive<?> archive,
+        String mainArchivePath) {
         for (Node node : testableArchive.getContent().values()) {
             final Asset asset = node.getAsset();
             if (asset instanceof ArchiveAsset) {
@@ -171,25 +176,31 @@ public class DeploymentInterceptor {
     }
 
     /**
-     * Export archive as exploded directory only if rebel.xml was not generated by this extension and it's the only dynamically generated asset in the archive.
+     * Export archive as exploded directory only if rebel.xml was not generated by this extension and it's the only
+     * dynamically generated asset in the archive.
      *
-     * @param testableArchive             archive being deployed
-     * @param archive                     archive being tested
-     * @param explodedDeploymentDirectory directory (parent) to which archive should be exported
-     * @param rebelXmlGenerated           flag telling if rebel.xml was generated by this extension
+     * @param testableArchive
+     *     archive being deployed
+     * @param archive
+     *     archive being tested
+     * @param explodedDeploymentDirectory
+     *     directory (parent) to which archive should be exported
+     * @param rebelXmlGenerated
+     *     flag telling if rebel.xml was generated by this extension
      */
-    private void explodeIfNeeded(Archive<?> testableArchive, Archive<?> archive, File explodedDeploymentDirectory, boolean rebelXmlGenerated)
-    {
+    private void explodeIfNeeded(Archive<?> testableArchive, Archive<?> archive, File explodedDeploymentDirectory,
+        boolean rebelXmlGenerated) {
         final RebelArchiveFilter rebelArchiveFilter = new RebelArchiveFilter(archive);
-        if (rebelXmlGenerated && (ArchiveHelper.isEarArchive(archive) || !rebelArchiveFilter.isRebelXmlTheOnlyNonFileNonClassAsset())) {
+        if (rebelXmlGenerated && (ArchiveHelper.isEarArchive(archive)
+            || !rebelArchiveFilter.isRebelXmlTheOnlyNonFileNonClassAsset())) {
             //noinspection ResultOfMethodCallIgnored
             explodedDeploymentDirectory.mkdirs();
-            getExplodableArchive(testableArchive, archive).as(ExplodedFilterableExporter.class).exportExploded(explodedDeploymentDirectory, rebelArchiveFilter);
+            getExplodableArchive(testableArchive, archive).as(ExplodedFilterableExporter.class)
+                .exportExploded(explodedDeploymentDirectory, rebelArchiveFilter);
         }
     }
 
-    private Archive<?> getExplodableArchive(Archive<?> testableArchive, Archive<?> archive)
-    {
+    private Archive<?> getExplodableArchive(Archive<?> testableArchive, Archive<?> archive) {
         return null == testableArchive ? archive : testableArchive;
     }
 
@@ -198,25 +209,36 @@ public class DeploymentInterceptor {
      * export archive with assets that cannot be referenced from disk,
      * proceed with deployment and store metadata.
      *
-     * @param eventContext                deployment event context
-     * @param deployment                  deployment data
-     * @param testableArchive             archive being deployed
-     * @param archive                     archive being tested
-     * @param explodedDeploymentDirectory directory (parent) to which archive should be exported
-     * @param mainArchivePath             path to top exploded archive
-     * @param metaDataFile                file to store metadata in
+     * @param eventContext
+     *     deployment event context
+     * @param deployment
+     *     deployment data
+     * @param testableArchive
+     *     archive being deployed
+     * @param archive
+     *     archive being tested
+     * @param explodedDeploymentDirectory
+     *     directory (parent) to which archive should be exported
+     * @param mainArchivePath
+     *     path to top exploded archive
+     * @param metaDataFile
+     *     file to store metadata in
      */
-    private void processArchiveAndProceedWithDeployment(EventContext<DeployDeployment> eventContext, Deployment deployment, Archive<?> testableArchive,
-                                                        Archive<?> archive, File explodedDeploymentDirectory, final String mainArchivePath, File metaDataFile)
-    {
+    private void processArchiveAndProceedWithDeployment(EventContext<DeployDeployment> eventContext,
+        Deployment deployment, Archive<?> testableArchive,
+        Archive<?> archive, File explodedDeploymentDirectory, final String mainArchivePath, File metaDataFile) {
         forcedUndeployment = true;
         try {
             event.fire(new UnDeployDeployment(eventContext.getEvent().getContainer(), deployment));
         } catch (Exception e) {
             final String msg =
-                "Cannot undeploy " + deployment.getDescription().getName() + ". Usually it's not a problem. To see more details enable FINE logging.";
+                "Cannot undeploy "
+                    + deployment.getDescription().getName()
+                    + ". Usually it's not a problem. To see more details enable FINE logging.";
             LOGGER.log(Level.INFO, msg);
-            LOGGER.log(Level.FINE, "Cannot undeploy " + deployment.getDescription().getName() + ". No such deployment or stale state in target/jrebel-temp", e);
+            LOGGER.log(Level.FINE, "Cannot undeploy "
+                + deployment.getDescription().getName()
+                + ". No such deployment or stale state in target/jrebel-temp", e);
         } finally {
             forcedUndeployment = false;
         }

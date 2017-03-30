@@ -34,30 +34,28 @@ import javax.inject.Inject;
  */
 @RunWith(Arquillian.class)
 public class JRebelIntegrationTestCase {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     @Inject
     InjectableArtifact injectableArtifact;
 
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
     @Deployment
-    public static WebArchive createWar()
-    {
+    public static WebArchive createWar() {
         return Packager.warWithInjectableArtifact(JRebelIntegrationTestCase.class);
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     @Test
-    public void shouldBeAbleToiChange() throws Exception
-    {
+    public void shouldBeAbleToiChange() throws Exception {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
          */
         System.out.println(injectableArtifact);
-//        System.out.println(injectableArtifact.bar());
+        //        System.out.println(injectableArtifact.bar());
         Assert.assertNotNull(injectableArtifact);
     }
 }

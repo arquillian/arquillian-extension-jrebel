@@ -24,7 +24,7 @@ public class EJBBean {
     /**
      * Run EARDeploymentTestCase once then uncomment this method and you will see that it gets hot deployed.
      */
-//    public String foo() {
-//        return "foo";
-//    }
+    //    public String foo() {
+    //        return "foo";
+    //    }
 }

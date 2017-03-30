@@ -36,14 +36,12 @@ public class EarDeploymentTestCase {
     InjectableArtifact injectableArtifact;
 
     @Deployment
-    public static EnterpriseArchive createEar()
-    {
+    public static EnterpriseArchive createEar() {
         return Packager.ear();
     }
 
     @Test
-    public void shouldBeAbleToiChange() throws Exception
-    {
+    public void shouldBeAbleToiChange() throws Exception {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
@@ -56,7 +54,7 @@ public class EarDeploymentTestCase {
          * Run EARDeploymentTestCase once then uncomment following lines as well as corresponding methods in EJBBean and InjectableArtifact
          * and you will see that it gets hot deployed.
          */
-//        System.out.println(EJBBean.foo());
-//        System.out.println(injectableArtifact.bar());
+        //        System.out.println(EJBBean.foo());
+        //        System.out.println(injectableArtifact.bar());
     }
 }

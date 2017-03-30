@@ -30,29 +30,28 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import java.io.File;
 
 public final class Packager {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
-    public static final FileAsset SAMPLE_WEB_RESOURCE = new FileAsset(new File("src/test/resources/sampleWebResource.html"));
+    public static final FileAsset SAMPLE_WEB_RESOURCE =
+        new FileAsset(new File("src/test/resources/sampleWebResource.html"));
 
-    public static final FileAsset SAMPLE_WEB_RESOURCE2 = new FileAsset(new File("src/test/webapp/sampleWebResource2.html"));
+    public static final FileAsset SAMPLE_WEB_RESOURCE2 =
+        new FileAsset(new File("src/test/webapp/sampleWebResource2.html"));
 
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    public static EnterpriseArchive createEnterpriseArchive()
-    {
+    public static EnterpriseArchive createEnterpriseArchive() {
         return ShrinkWrap.create(EnterpriseArchive.class, "test.ear").addAsModule(createWebArchive());
     }
 
-    public static WebArchive createFullyReloadableWebArchive()
-    {
+    public static WebArchive createFullyReloadableWebArchive() {
         return ShrinkWrap.create(WebArchive.class, "fullyReloadableWebArchive.war")
             .addPackages(true, Fake1.class.getPackage())
             .addAsWebResource(SAMPLE_WEB_RESOURCE, ArchivePaths.create("sampleWebResource.html"))
             .addAsWebResource(SAMPLE_WEB_RESOURCE2, ArchivePaths.create("sampleWebResource2.html"));
     }
 
-    public static WebArchive createWebArchive()
-    {
+    public static WebArchive createWebArchive() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
             .addClass(Serializer.class)
             .addClass(DirectoryWalker.class)
@@ -64,9 +63,8 @@ public final class Packager {
             .addAsWebResource(SAMPLE_WEB_RESOURCE2, ArchivePaths.create("sampleWebResource2.html"));
     }
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    private Packager()
-    {
+    private Packager() {
     }
 }

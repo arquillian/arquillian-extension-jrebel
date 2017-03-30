@@ -26,14 +26,12 @@ import org.jboss.arquillian.core.spi.LoadableExtension;
  * @version $Revision: $
  */
 public class JRebelExtension implements LoadableExtension {
-// ------------------------ INTERFACE METHODS ------------------------
+    // ------------------------ INTERFACE METHODS ------------------------
 
-
-// --------------------- Interface LoadableExtension ---------------------
+    // --------------------- Interface LoadableExtension ---------------------
 
     @Override
-    public void register(ExtensionBuilder builder)
-    {
+    public void register(ExtensionBuilder builder) {
         builder.observer(DeploymentInterceptor.class);
     }
 }

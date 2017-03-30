@@ -29,7 +29,7 @@ import javax.inject.Inject;
 
 @RunWith(Arquillian.class)
 public class MultipleDeploymentsTestCase {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private static final String OTHER_WAR_WITH_INJECTABLE_ARTIFACT = "OtherWarWithInjectableArtifact.war";
 
@@ -38,26 +38,23 @@ public class MultipleDeploymentsTestCase {
     @Inject
     InjectableArtifact injectableArtifact;
 
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
     @Deployment(name = WAR_WITH_INJECTABLE_ARTIFACT)
-    public static WebArchive createFirstArchive()
-    {
+    public static WebArchive createFirstArchive() {
         return Packager.warWithInjectableArtifact(WAR_WITH_INJECTABLE_ARTIFACT);
     }
 
     @Deployment(name = OTHER_WAR_WITH_INJECTABLE_ARTIFACT)
-    public static WebArchive createSecondArchive()
-    {
+    public static WebArchive createSecondArchive() {
         return Packager.otherWarWithInjectableArtifact();
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     @Test
     @OperateOnDeployment(WAR_WITH_INJECTABLE_ARTIFACT)
-    public void injectableArtifactAvailable() throws Exception
-    {
+    public void injectableArtifactAvailable() throws Exception {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
@@ -68,8 +65,7 @@ public class MultipleDeploymentsTestCase {
 
     @Test
     @OperateOnDeployment(OTHER_WAR_WITH_INJECTABLE_ARTIFACT)
-    public void injectableArtifactAvailable2() throws Exception
-    {
+    public void injectableArtifactAvailable2() throws Exception {
         Assert.assertNotNull(injectableArtifact);
     }
 }

@@ -23,32 +23,27 @@ import org.jboss.shrinkwrap.api.Node;
 import org.jboss.shrinkwrap.api.asset.ArchiveAsset;
 
 public final class ArchiveHelper {
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    public static boolean isEarArchive(Archive<?> archive)
-    {
+    public static boolean isEarArchive(Archive<?> archive) {
         return archive.getName().endsWith(".ear");
     }
 
-    public static boolean isNestedArchiveOfEAR(Archive<?> archive, Node node)
-    {
+    public static boolean isNestedArchiveOfEAR(Archive<?> archive, Node node) {
         return ArchiveHelper.isEarArchive(archive) && isTopLevelNode(node) && node.getAsset() instanceof ArchiveAsset;
     }
 
-    public static boolean isTopLevelNode(Node node)
-    {
+    public static boolean isTopLevelNode(Node node) {
         final ArchivePath parent = node.getPath().getParent();
         return parent == null || "/".equals(parent.get());
     }
 
-    public static boolean isWebArchive(Archive<?> archive)
-    {
+    public static boolean isWebArchive(Archive<?> archive) {
         return archive.getName().endsWith(".war");
     }
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    private ArchiveHelper()
-    {
+    private ArchiveHelper() {
     }
 }

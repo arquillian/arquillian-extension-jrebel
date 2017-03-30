@@ -36,20 +36,18 @@ import java.util.List;
 import java.util.Map;
 
 public final class RebelXmlHelper {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private static final FileFilter DIRECTORY_FILTER = new FileFilter() {
         @Override
-        public boolean accept(File pathname)
-        {
+        public boolean accept(File pathname) {
             return pathname.isDirectory();
         }
     };
 
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    public static String createRebelXML(Archive<?> archive, String path)
-    {
+    public static String createRebelXML(Archive<?> archive, String path) {
         StringBuilder contents = new StringBuilder();
         final RebelArchiveFilter archiveFilter = new RebelArchiveFilter(archive);
         final List<Node> fileNodes = new ArrayList<Node>();
@@ -57,14 +55,17 @@ public final class RebelXmlHelper {
         for (Node node : archiveFilter.getFileOrClassNodes()) {
             final Asset asset = node.getAsset();
             if (asset instanceof ClassAsset) {
-                final String className = AssetHelper.getClass((ClassAsset) asset).getCanonicalName().replaceAll("\\.", "/");
+                final String className =
+                    AssetHelper.getClass((ClassAsset) asset).getCanonicalName().replaceAll("\\.", "/");
                 includes.append("\n\t\t\t<include name=\"").append(className).append(".class\"/>");
                 includes.append("\n\t\t\t<include name=\"").append(className).append("$*.class\"/>");
             } else if (asset instanceof ClassLoaderAsset) {
                 final String resourceName = AssetHelper.getResourceName((ClassLoaderAsset) asset);
                 includes.append("\n\t\t\t<include name=\"").append(resourceName).append("\"/>");
                 if (resourceName.endsWith(".class")) {
-                    includes.append("\n\t\t\t<include name=\"").append(resourceName.replaceAll("\\.class$", "\\$*.class")).append("\"/>");
+                    includes.append("\n\t\t\t<include name=\"")
+                        .append(resourceName.replaceAll("\\.class$", "\\$*.class"))
+                        .append("\"/>");
                 }
             } else if (asset instanceof FileAsset) {
                 fileNodes.add(node);
@@ -110,24 +111,30 @@ public final class RebelXmlHelper {
             }
             contents.append("\n\t\t\t<dir name=\"").append(path).append("\"/>").append("\n\t\t</link>\n\t</web>\n");
         }
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<application\n" +
-            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-            "  xmlns=\"http://www.zeroturnaround.com\"\n" +
-            "  xsi:schemaLocation=\"http://www.zeroturnaround.com http://www.zeroturnaround.com/alderaan/rebel-2_0.xsd\">\n" +
-            contents +
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            +
+            "<application\n"
+            +
+            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+            +
+            "  xmlns=\"http://www.zeroturnaround.com\"\n"
+            +
+            "  xsi:schemaLocation=\"http://www.zeroturnaround.com http://www.zeroturnaround.com/alderaan/rebel-2_0.xsd\">\n"
+            +
+            contents
+            +
             "\n</application>";
     }
 
     /**
      * Creates map of root path and sub paths of resources contained in that root path.
      *
-     * @param nodes nodes holding FileAssets
+     * @param nodes
+     *     nodes holding FileAssets
      *
      * @return rootized map
      */
-    private static Map<String, List<String>> rootize(Collection<Node> nodes)
-    {
+    private static Map<String, List<String>> rootize(Collection<Node> nodes) {
         final Rootizer rootizer = new Rootizer();
         final HashMap<String, List<String>> rootizedAssets = new HashMap<String, List<String>>();
         for (Node node : nodes) {
@@ -143,23 +150,21 @@ public final class RebelXmlHelper {
         return rootizedAssets;
     }
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    private RebelXmlHelper()
-    {
+    private RebelXmlHelper() {
     }
 
-// -------------------------- INNER CLASSES --------------------------
+    // -------------------------- INNER CLASSES --------------------------
 
     public static class Rootizer {
-// ------------------------------ FIELDS ------------------------------
+        // ------------------------------ FIELDS ------------------------------
 
         private final List<String> rootPaths = new ArrayList<String>();
 
-// --------------------------- CONSTRUCTORS ---------------------------
+        // --------------------------- CONSTRUCTORS ---------------------------
 
-        public Rootizer()
-        {
+        public Rootizer() {
             final File mainSources = new File("src/main");
 
             if (mainSources.exists()) {
@@ -179,10 +184,9 @@ public final class RebelXmlHelper {
             rootPaths.add(new File("target").getAbsolutePath());
         }
 
-// -------------------------- OTHER METHODS --------------------------
+        // -------------------------- OTHER METHODS --------------------------
 
-        public RootizedPath rootize(Node node)
-        {
+        public RootizedPath rootize(Node node) {
             final Asset asset = node.getAsset();
             if (!(asset instanceof FileAsset)) {
                 return null;
@@ -202,40 +206,36 @@ public final class RebelXmlHelper {
             return null;
         }
 
-// -------------------------- INNER CLASSES --------------------------
+        // -------------------------- INNER CLASSES --------------------------
 
         public static class RootizedPath {
-// ------------------------------ FIELDS ------------------------------
+            // ------------------------------ FIELDS ------------------------------
 
             private final String path;
 
             private final String root;
 
-// --------------------------- CONSTRUCTORS ---------------------------
+            // --------------------------- CONSTRUCTORS ---------------------------
 
-            public RootizedPath(String root, String path)
-            {
+            public RootizedPath(String root, String path) {
                 this.root = root;
                 this.path = path;
             }
 
-// --------------------- GETTER / SETTER METHODS ---------------------
+            // --------------------- GETTER / SETTER METHODS ---------------------
 
-            public String getPath()
-            {
+            public String getPath() {
                 return path;
             }
 
-            public String getRoot()
-            {
+            public String getRoot() {
                 return root;
             }
 
-// ------------------------ CANONICAL METHODS ------------------------
+            // ------------------------ CANONICAL METHODS ------------------------
 
             @Override
-            public String toString()
-            {
+            public String toString() {
                 return "RootizedPath{" +
                     "path='" + path + '\'' +
                     ", root='" + root + '\'' +

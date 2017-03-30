@@ -28,30 +28,28 @@ import javax.inject.Inject;
 
 @RunWith(Arquillian.class)
 public class JarDeploymentTestCase {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     @Inject
     EJBBean EJBBean;
 
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
     @Deployment
-    public static JavaArchive createJar()
-    {
+    public static JavaArchive createJar() {
         return Packager.ejbJar();
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     @Test
-    public void shouldBeAbleToiChange() throws Exception
-    {
+    public void shouldBeAbleToiChange() throws Exception {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
          */
         Assert.assertNotNull(EJBBean);
         System.out.println(EJBBean);
-//        System.out.println(EJBBean.foo());
+        //        System.out.println(EJBBean.foo());
     }
 }

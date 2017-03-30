@@ -21,26 +21,24 @@ import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class InjectableArtifact {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private boolean valueSet;
 
-// --------------------- GETTER / SETTER METHODS ---------------------
+    // --------------------- GETTER / SETTER METHODS ---------------------
 
-    public boolean isValueSet()
-    {
+    public boolean isValueSet() {
         return valueSet;
     }
 
-    public void setValueSet(boolean valueSet)
-    {
+    public void setValueSet(boolean valueSet) {
         this.valueSet = valueSet;
     }
 
     /**
      * Run EARDeploymentTestCase once then uncomment this method and you will see that it gets hot deployed.
      */
-//    public String bar() {
-//        return "bar";
-//    }
+    //    public String bar() {
+    //        return "bar";
+    //    }
 }

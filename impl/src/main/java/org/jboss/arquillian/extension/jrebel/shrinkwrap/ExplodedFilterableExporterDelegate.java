@@ -27,24 +27,24 @@ import org.jboss.shrinkwrap.impl.base.exporter.ExplodedExporterDelegate;
 import java.io.File;
 
 public class ExplodedFilterableExporterDelegate extends ExplodedExporterDelegate {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private ArchiveFilter filter;
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    public ExplodedFilterableExporterDelegate(Archive<?> archive, File baseDirectory, String directoryName, ArchiveFilter filter)
-    {
+    public ExplodedFilterableExporterDelegate(Archive<?> archive, File baseDirectory, String directoryName,
+        ArchiveFilter filter) {
         super(archive, baseDirectory, directoryName);
         this.filter = filter;
     }
 
     @Override
-    protected void processNode(ArchivePath path, Node node)
-    {
+    protected void processNode(ArchivePath path, Node node) {
         if (ArchiveHelper.isNestedArchiveOfEAR(getArchive(), node)) {
             final Archive<?> archive = ((ArchiveAsset) node.getAsset()).getArchive();
-            new ExplodedFilterableExporterDelegate(archive, getResult(), path.get(), new RebelArchiveFilter(archive)).export();
+            new ExplodedFilterableExporterDelegate(archive, getResult(), path.get(),
+                new RebelArchiveFilter(archive)).export();
         } else if (filter.accept(node)) {
             super.processNode(path, node);
         }

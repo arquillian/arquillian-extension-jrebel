@@ -9,20 +9,17 @@ import java.io.File;
 import java.lang.reflect.Field;
 
 public final class AssetHelper {
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    public static Class<?> getClass(ClassAsset asset)
-    {
+    public static Class<?> getClass(ClassAsset asset) {
         return (Class<?>) getFieldValueByReflection(asset, "clazz");
     }
 
-    public static ClassLoader getClassLoader(ClassLoaderAsset asset)
-    {
+    public static ClassLoader getClassLoader(ClassLoaderAsset asset) {
         return (ClassLoader) getFieldValueByReflection(asset, "classLoader");
     }
 
-    private static Object getFieldValueByReflection(Asset asset, String fieldName)
-    {
+    private static Object getFieldValueByReflection(Asset asset, String fieldName) {
         try {
             Field privateField = asset.getClass().getDeclaredField(fieldName);
             privateField.setAccessible(true);
@@ -34,19 +31,16 @@ public final class AssetHelper {
         }
     }
 
-    public static File getFile(FileAsset asset)
-    {
+    public static File getFile(FileAsset asset) {
         return (File) getFieldValueByReflection(asset, "file");
     }
 
-    public static String getResourceName(ClassLoaderAsset asset)
-    {
+    public static String getResourceName(ClassLoaderAsset asset) {
         return (String) getFieldValueByReflection(asset, "resourceName");
     }
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    private AssetHelper()
-    {
+    private AssetHelper() {
     }
 }

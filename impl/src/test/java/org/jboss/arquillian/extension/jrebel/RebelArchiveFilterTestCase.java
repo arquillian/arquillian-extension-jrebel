@@ -36,31 +36,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RebelArchiveFilterTestCase {
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     @Test
-    public void getFileAssets()
-    {
+    public void getFileAssets() {
         final WebArchive archive = Packager.createWebArchive();
-        final Asset serializerClassAsset = archive.get("/WEB-INF/classes/" + Serializer.class.getCanonicalName().replaceAll("\\.", "/") + ".class").getAsset();
-        final Asset fake1ClassAsset = archive.get("/WEB-INF/classes/" + Fake1.class.getCanonicalName().replaceAll("\\.", "/") + ".class").getAsset();
-        final Asset directoryWalkerClassAsset = archive.get("/WEB-INF/classes/" + DirectoryWalker.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
-            .getAsset();
-        final Asset fake2ClassAsset = archive.get("/WEB-INF/classes/" + Fake2.class.getCanonicalName().replaceAll("\\.", "/") + ".class").getAsset();
-        final Asset fake3ClassAsset = archive.get("/WEB-INF/classes/" + Fake3.class.getCanonicalName().replaceAll("\\.", "/") + ".class").getAsset();
-        final Asset fake4ClassAsset = archive.get("/WEB-INF/classes/" + Fake4.class.getCanonicalName().replaceAll("\\.", "/") + ".class").getAsset();
+        final Asset serializerClassAsset =
+            archive.get("/WEB-INF/classes/" + Serializer.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
+                .getAsset();
+        final Asset fake1ClassAsset =
+            archive.get("/WEB-INF/classes/" + Fake1.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
+                .getAsset();
+        final Asset directoryWalkerClassAsset =
+            archive.get("/WEB-INF/classes/" + DirectoryWalker.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
+                .getAsset();
+        final Asset fake2ClassAsset =
+            archive.get("/WEB-INF/classes/" + Fake2.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
+                .getAsset();
+        final Asset fake3ClassAsset =
+            archive.get("/WEB-INF/classes/" + Fake3.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
+                .getAsset();
+        final Asset fake4ClassAsset =
+            archive.get("/WEB-INF/classes/" + Fake4.class.getCanonicalName().replaceAll("\\.", "/") + ".class")
+                .getAsset();
         final RebelArchiveFilter archiveFilter = new RebelArchiveFilter(archive);
         final List<Node> fileOrClassAssets = new ArrayList<Node>(archiveFilter.getFileOrClassNodes());
         Assert.assertEquals(9, fileOrClassAssets.size());
         for (Node node : fileOrClassAssets) {
             Asset asset = node.getAsset();
             if (asset instanceof FileAsset) {
-                Assert.assertTrue(Packager.SAMPLE_WEB_RESOURCE.equals(asset) || Packager.SAMPLE_WEB_RESOURCE2.equals(asset));
+                Assert.assertTrue(
+                    Packager.SAMPLE_WEB_RESOURCE.equals(asset) || Packager.SAMPLE_WEB_RESOURCE2.equals(asset));
             } else if (asset instanceof ClassAsset) {
                 Assert.assertTrue(serializerClassAsset.equals(asset) || directoryWalkerClassAsset.equals(asset));
             } else if (asset instanceof ClassLoaderAsset) {
                 Assert.assertTrue(
-                    serializerClassAsset.equals(asset) || fake1ClassAsset.equals(asset) || fake2ClassAsset.equals(asset) || fake3ClassAsset.equals(asset)
+                    serializerClassAsset.equals(asset)
+                        || fake1ClassAsset.equals(asset)
+                        || fake2ClassAsset.equals(asset)
+                        || fake3ClassAsset.equals(asset)
                         || fake4ClassAsset.equals(asset));
             } else {
                 Assert.assertTrue("Invalid type of asset: " + asset, false);

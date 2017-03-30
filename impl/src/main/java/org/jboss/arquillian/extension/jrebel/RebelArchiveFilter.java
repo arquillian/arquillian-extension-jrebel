@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RebelArchiveFilter implements ArchiveFilter {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private final Archive<?> archive;
 
@@ -44,22 +44,19 @@ public class RebelArchiveFilter implements ArchiveFilter {
 
     private final RebelXmlHelper.Rootizer rootizer = new RebelXmlHelper.Rootizer();
 
-// --------------------------- CONSTRUCTORS ---------------------------
+    // --------------------------- CONSTRUCTORS ---------------------------
 
-    public RebelArchiveFilter(Archive<?> archive)
-    {
+    public RebelArchiveFilter(Archive<?> archive) {
         this.archive = archive;
         filter();
     }
 
-// ------------------------ INTERFACE METHODS ------------------------
+    // ------------------------ INTERFACE METHODS ------------------------
 
-
-// --------------------- Interface ArchiveFilter ---------------------
+    // --------------------- Interface ArchiveFilter ---------------------
 
     @Override
-    public boolean accept(Node node)
-    {
+    public boolean accept(Node node) {
         if (node.getAsset() == null) {
             return isNotEmpty(node);
         } else {
@@ -68,25 +65,25 @@ public class RebelArchiveFilter implements ArchiveFilter {
         }
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
-    public Collection<Node> getFileOrClassNodes()
-    {
+    public Collection<Node> getFileOrClassNodes() {
         return fileOrClassNode.values();
     }
 
-    public Collection<Asset> getNonFileNonClassAssets()
-    {
+    public Collection<Asset> getNonFileNonClassAssets() {
         return nonFileNonClassAssets.values();
     }
 
-    public boolean isRebelXmlTheOnlyNonFileNonClassAsset()
-    {
-        return nonFileNonClassAssets.size() == 1 && nonFileNonClassAssets.keySet().iterator().next().get().endsWith("rebel.xml");
+    public boolean isRebelXmlTheOnlyNonFileNonClassAsset() {
+        return nonFileNonClassAssets.size() == 1 && nonFileNonClassAssets.keySet()
+            .iterator()
+            .next()
+            .get()
+            .endsWith("rebel.xml");
     }
 
-    private void filter()
-    {
+    private void filter() {
         fileOrClassNode = new HashMap<ArchivePath, Node>();
         nonFileNonClassAssets = new HashMap<ArchivePath, Asset>();
         Node node;
@@ -94,7 +91,8 @@ public class RebelArchiveFilter implements ArchiveFilter {
         for (Map.Entry<ArchivePath, Node> entry : archive.getContent().entrySet()) {
             node = entry.getValue();
             asset = node.getAsset();
-            if (asset instanceof FileAsset || asset instanceof ClassAsset || (asset instanceof ClassLoaderAsset && isProperlyNestedClass(
+            if (asset instanceof FileAsset || asset instanceof ClassAsset || (asset instanceof ClassLoaderAsset
+                && isProperlyNestedClass(
                 (ClassLoaderAsset) asset))) {
                 fileOrClassNode.put(entry.getKey(), node);
             } else if (!ArchiveHelper.isNestedArchiveOfEAR(archive, node) && asset != null) {
@@ -103,8 +101,7 @@ public class RebelArchiveFilter implements ArchiveFilter {
         }
     }
 
-    private boolean isNotEmpty(Node node)
-    {
+    private boolean isNotEmpty(Node node) {
         if (node.getAsset() == null) {
             for (Node child : node.getChildren()) {
                 if (isNotEmpty(child)) {
@@ -117,8 +114,7 @@ public class RebelArchiveFilter implements ArchiveFilter {
         }
     }
 
-    private boolean isProperlyNestedClass(ClassLoaderAsset asset)
-    {
+    private boolean isProperlyNestedClass(ClassLoaderAsset asset) {
         final ClassLoader classLoader = AssetHelper.getClassLoader(asset);
         final String resourceName = AssetHelper.getResourceName(asset);
         final URL resourceURL = classLoader.getResource(resourceName);

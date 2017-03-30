@@ -20,7 +20,7 @@ package org.jboss.arquillian.extension.jrebel.shrinkwrap;
 import org.jboss.shrinkwrap.api.Node;
 
 public interface ArchiveFilter {
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     boolean accept(Node node);
 }

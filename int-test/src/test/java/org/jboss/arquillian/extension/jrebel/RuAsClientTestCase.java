@@ -35,22 +35,19 @@ import static org.junit.Assert.assertTrue;
 public class RuAsClientTestCase {
 
     @Deployment(name = "ear")
-    public static EnterpriseArchive createEAR()
-    {
+    public static EnterpriseArchive createEAR() {
         return Packager.ear();
     }
 
     @Deployment(name = "war")
-    public static WebArchive createWar()
-    {
+    public static WebArchive createWar() {
         return Packager.warWithInjectableArtifact(RuAsClientTestCase.class);
     }
 
     @OperateOnDeployment("war")
     @RunAsClient
     @Test
-    public void shouldBeAbleToChange(@ArquillianResource URL deploymentURL) throws Exception
-    {
+    public void shouldBeAbleToChange(@ArquillianResource URL deploymentURL) throws Exception {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.
@@ -61,8 +58,7 @@ public class RuAsClientTestCase {
     @OperateOnDeployment("ear")
     @RunAsClient
     @Test
-    public void shouldBeAbleToChangeEAR(@ArquillianResource URL deploymentURL) throws Exception
-    {
+    public void shouldBeAbleToChangeEAR(@ArquillianResource URL deploymentURL) throws Exception {
         /**
          * Run tests once, then modify this method and run tests again.
          * Notice that unless you run "mvn clean" the package is not redeployed between "mvn test" runs.

@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 
 @RunWith(Arquillian.class)
 public class RebelAlreadyShippedTestCase {
-// ------------------------------ FIELDS ------------------------------
+    // ------------------------------ FIELDS ------------------------------
 
     private static final String REBEL_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
         "<application" +
@@ -52,10 +52,9 @@ public class RebelAlreadyShippedTestCase {
     @Inject
     private InjectableArtifact injectableArtifact;
 
-// -------------------------- STATIC METHODS --------------------------
+    // -------------------------- STATIC METHODS --------------------------
 
-    private static String asUTF8String(InputStream in)
-    {
+    private static String asUTF8String(InputStream in) {
         StringBuilder buffer = new StringBuilder();
         String line;
 
@@ -85,17 +84,17 @@ public class RebelAlreadyShippedTestCase {
     }
 
     @Deployment
-    public static WebArchive createArchive()
-    {
-        return Packager.warWithInjectableArtifact(RebelAlreadyShippedTestCase.class).add(new StringAsset(REBEL_XML), REBEL_XML_PATH);
+    public static WebArchive createArchive() {
+        return Packager.warWithInjectableArtifact(RebelAlreadyShippedTestCase.class)
+            .add(new StringAsset(REBEL_XML), REBEL_XML_PATH);
     }
 
-// -------------------------- OTHER METHODS --------------------------
+    // -------------------------- OTHER METHODS --------------------------
 
     @Test
-    public void checkRebel() throws Exception
-    {
-        final InputStream resourceAsStream = injectableArtifact.getClass().getClassLoader().getResourceAsStream("rebel.xml");
+    public void checkRebel() throws Exception {
+        final InputStream resourceAsStream =
+            injectableArtifact.getClass().getClassLoader().getResourceAsStream("rebel.xml");
         Assert.assertNotNull(resourceAsStream);
         Assert.assertEquals(REBEL_XML, asUTF8String(resourceAsStream));
     }
