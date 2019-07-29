@@ -31,7 +31,7 @@
 
     <!-- Versioning -->
     <version.arquillian_core>1.0.0.Final</version.arquillian_core>
-    <version.jboss_as_5>5.1.0.GA</version.jboss_as_5>
+    <version.jboss_as_5>6.1.0.Final</version.jboss_as_5>
     <version.jboss_javaee6_spec>1.0.0.Final</version.jboss_javaee6_spec>
 
     <!-- override from parent -->
