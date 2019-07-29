@@ -53,7 +53,7 @@
     <dependency>
       <groupId>org.jboss.spec.javax.ejb</groupId>
       <artifactId>jboss-ejb-api_3.1_spec</artifactId>
-      <version>1.0.1.Final</version>
+      <version>1.0.2.Final</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
